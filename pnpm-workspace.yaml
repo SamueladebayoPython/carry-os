@@ -1,0 +1,14 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+allowBuilds:
+  '@scarf/scarf': false
+minimumReleaseAgeExclude:
+  - "@isaacs/nonrecursive-glob-match@1.1.0"
+  - "@nestjs/cli@12.0.12"
+  - "@nestjs/common@12.4.0"
+  - "@nestjs/core@12.4.0"
+  - "@nestjs/platform-express@12.4.0"
+  - "@nestjs/schematics@12.0.13"
+  - "@nestjs/swagger@12.1.1"
+  - minimatch@11.0.5
