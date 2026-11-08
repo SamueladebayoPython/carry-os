@@ -78,7 +78,7 @@ authentication belongs to the backend.
 | Path | Responsibility | Current status |
 | --- | --- | --- |
 | `apps/web` | Next.js UI, pages, wallet interfaces, NEAR Wallet Selector flow, API integration | Foundation page only |
-| `apps/api` | NestJS REST API, session enforcement, ownership verification, discovery, custody coordination, monitoring, chain integrations | Health endpoint only |
+| `apps/api` | NestJS REST API, session enforcement, ownership verification, discovery, custody coordination, monitoring, chain integrations | Health plus opt-in development/test auth endpoints |
 | `packages/shared` | Shared types and validation contracts used across the workspace | Foundation contracts only |
 | `packages/config` | Shared tooling configuration, currently ESLint | Foundation tooling |
 | `packages/database` | Intended home for Prisma schema/client if the team chooses a package boundary | Does not exist yet |
@@ -167,10 +167,11 @@ Explicit constraints:
 
 The API is REST, documented with NestJS Swagger/OpenAPI. Shared request and
 response contracts belong in `packages/shared` and must be agreed by both
-developers before product endpoints are implemented.
+developers before new product endpoints are implemented. The auth exchange is
+currently backend-owned and documented in [API.md](API.md).
 
-The only implemented endpoint is `GET /api/health`. All product endpoint
-contracts are **TBD**. See [API.md](API.md).
+Implemented endpoints are `GET /api/health` and the opt-in development/test
+auth routes. Other product endpoint contracts are **TBD**. See [API.md](API.md).
 
 ## 9. Deployment and operations
 

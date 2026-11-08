@@ -1,8 +1,8 @@
 # carry os security principles
 
-> **Status:** security baseline for the foundation only. No authentication,
-> wallet proof, custody contract, signing service, or production database exists
-> yet. Items marked **TBD** require a decision before implementation.
+> **Status:** baseline plus an opt-in development/test authentication slice.
+> No wallet proof, custody contract, signing service, or production database
+> exists yet. Items marked **TBD** require a decision before implementation.
 
 ## 1. Non-negotiable principles
 
@@ -32,19 +32,30 @@
 - Vault/program state is the custody authority.
 - Database access is privileged infrastructure access and must be restricted.
 
-## 3. Authentication and sessions — TBD
+## 3. Authentication and sessions — development implementation
 
-The following require approval before implementation:
+The backend now has an opt-in development/test session exchange. The following
+still require agreement or implementation before production:
 
-- NEAR authentication message format and verification flow.
-- Session storage (server-side, database-backed, or signed token), lifetime,
-  rotation, and revocation.
-- Protection against replay, fixation, CSRF, and cross-site request forgery.
-- Cookie/security-header policy and CORS allowlists.
+- Confirmation that the selected FastAuth client can provide the identity JWT
+  accepted by the backend, plus the exact issuer, audience, and JWKS URL.
+- Persistent server-side session and identity storage. The current in-memory
+  implementation is development/test only and is rejected in production.
+- Session rotation and durable revocation policy.
+- All future state-changing authenticated routes must apply `AuthSessionGuard`,
+  which requires the session-bound CSRF header for non-safe methods.
+- Cookie domain and SameSite policy for the eventual deployed frontend/API
+  origins. Current cookies use HttpOnly, SameSite=Lax, Secure in production,
+  and an `/api/auth` path.
 - Account recovery and session invalidation after wallet replacement.
 - MFA or step-up authentication for high-risk actions.
 
-The current API has no authentication and exposes only a health endpoint.
+Authentication is disabled by default. When explicitly enabled outside
+production, it validates RS256 JWTs against configured issuer, audience,
+expiry, and a configured HTTPS JWKS endpoint. Sessions use random opaque
+cookies; only a SHA-256 token hash is stored in memory. `/api/auth/logout`
+requires both the allowed Origin and the session-bound CSRF token. NEAR Auth
+alone does not establish ownership of an external wallet.
 
 ## 4. Wallet ownership proof — TBD
 
@@ -139,7 +150,8 @@ that security testing is complete.
 
 ## 10. Known security gaps at this stage
 
-- No authentication or authorization.
+- Authentication is disabled by default and is not production-ready; protected
+  product routes and authorization policies are not yet implemented.
 - No wallet ownership verification.
 - No custody contracts or programs.
 - No transaction monitoring.
