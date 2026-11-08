@@ -1,5 +1,6 @@
 import { Module, type DynamicModule } from "@nestjs/common";
 
+import { ChainRegistryModule } from "./chain-registry/chain-registry.module.js";
 import { ErrorHandlingModule } from "./common/errors/error-handling.module.js";
 import { RequestContextModule } from "./common/request-context/request-context.module.js";
 import { ValidationModule } from "./common/validation/validation.module.js";
@@ -17,6 +18,7 @@ export class AppModule {
         RequestContextModule,
         ErrorHandlingModule,
         ValidationModule,
+        ChainRegistryModule,
         HealthModule,
       ],
     };
