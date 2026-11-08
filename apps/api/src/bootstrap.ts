@@ -4,30 +4,46 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 import { AppModule } from "./app.module.js";
 import { SERVICE_VERSION } from "./app.constants.js";
+import { RequestTrackingMiddleware } from "./common/middleware/request-tracking.middleware.js";
+import { REQUEST_ID_HEADER } from "./common/request-context/request-id.js";
+import type {
+  RequestWithRequestId,
+  ResponseWithRequestId,
+} from "./common/request-context/request-context.types.js";
+import {
+  loadAppConfig,
+  type AppConfig,
+} from "./config/app-config.js";
 
 export interface CreateAppOptions {
   logger?: LogLevel[] | false;
-}
-
-function resolveAllowedOrigins(): string[] {
-  const configuredOrigins = process.env.WEB_ORIGIN ?? "http://localhost:3000";
-
-  return configuredOrigins
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter((origin) => origin.length > 0);
+  config?: AppConfig;
+  env?: NodeJS.ProcessEnv;
 }
 
 export async function createApp(
   options: CreateAppOptions = {},
 ): Promise<INestApplication> {
-  const app = await NestFactory.create(AppModule, {
+  const config = options.config ?? loadAppConfig(options.env ?? process.env);
+
+  const app = await NestFactory.create(AppModule.forRoot(config), {
     logger: options.logger ?? ["error", "warn", "log"],
   });
 
+  const requestTracking = app.get(RequestTrackingMiddleware);
+
+  app.use(
+    (
+      request: RequestWithRequestId,
+      response: ResponseWithRequestId,
+      next: (error?: unknown) => void,
+    ) => requestTracking.use(request, response, next),
+  );
+
   app.setGlobalPrefix("api");
   app.enableCors({
-    origin: resolveAllowedOrigins(),
+    origin: [...config.webOrigins],
+    exposedHeaders: [REQUEST_ID_HEADER],
   });
 
   const swaggerConfig = new DocumentBuilder()

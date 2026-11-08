@@ -1,22 +1,24 @@
 import "reflect-metadata";
 
 import { createApp } from "./bootstrap.js";
-import { DEFAULT_API_PORT } from "./app.constants.js";
+import { AppConfigService } from "./config/app-config.service.js";
 
 async function bootstrap(): Promise<void> {
   const app = await createApp();
-  const port = Number.parseInt(
-    process.env.PORT ?? String(DEFAULT_API_PORT),
-    10,
+  const config = app.get(AppConfigService);
+
+  await app.listen(config.port);
+
+  console.log(`carry os API listening on http://localhost:${config.port}`);
+  console.log(
+    `OpenAPI documentation at http://localhost:${config.port}/api/docs`,
   );
-
-  await app.listen(port);
-
-  console.log(`carry os API listening on http://localhost:${port}`);
-  console.log(`OpenAPI documentation at http://localhost:${port}/api/docs`);
 }
 
 bootstrap().catch((error: unknown) => {
-  console.error("carry os API failed to start.", error);
+  const message =
+    error instanceof Error ? error.message : "Unknown startup error.";
+
+  console.error(`carry os API failed to start: ${message}`);
   process.exitCode = 1;
 });
