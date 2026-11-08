@@ -38,7 +38,7 @@ not be able to override on-chain custody state.
 | OpenAPI/Swagger documentation | Foundation implemented for current endpoints |
 | Shared types and validation contracts | Foundation implemented |
 | PostgreSQL + Prisma schema | Not implemented — frontend developer ownership, coordination required |
-| NEAR authentication and sessions | Not implemented |
+| NEAR authentication and sessions | Development/test backend exchange implemented; disabled pending FastAuth token handoff and persistence decision |
 | Wallet connection and ownership proof | Not implemented |
 | NFT discovery | Not implemented |
 | Custody/vault contracts | Not implemented |
