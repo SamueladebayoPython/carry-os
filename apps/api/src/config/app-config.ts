@@ -24,6 +24,11 @@ export interface AppConfig {
   readonly isProduction: boolean;
   readonly port: number;
   readonly webOrigins: readonly string[];
+  readonly authEnabled: boolean;
+  readonly authSessionStore: "memory";
+  readonly nearAuthIssuer?: string;
+  readonly nearAuthAudience?: string;
+  readonly nearAuthJwksUri?: string;
 }
 
 function isNodeEnvironment(value: string): value is NodeEnvironment {
@@ -162,6 +167,35 @@ export function loadAppConfig(
     }
   }
 
+  const authEnabled = parsed.data.AUTH_ENABLED === "true";
+  if (parsed.data.AUTH_ENABLED !== "true" && parsed.data.AUTH_ENABLED !== "false") {
+    issues.push({ variable: "AUTH_ENABLED", message: "must be true or false." });
+  }
+  if (parsed.data.AUTH_SESSION_STORE !== "memory") {
+    issues.push({ variable: "AUTH_SESSION_STORE", message: "must be memory; no persistent session store is implemented yet." });
+  }
+  if (nodeEnv === "production" && authEnabled && parsed.data.AUTH_SESSION_STORE === "memory") {
+    issues.push({ variable: "AUTH_SESSION_STORE", message: "memory sessions are only allowed in development and test; disable auth until persistent storage is implemented." });
+  }
+  if (authEnabled) {
+    for (const variable of ["NEAR_AUTH_ISSUER", "NEAR_AUTH_AUDIENCE", "NEAR_AUTH_JWKS_URI"] as const) {
+      if (!parsed.data[variable]) issues.push({ variable, message: "is required when AUTH_ENABLED=true." });
+    }
+    if (parsed.data.NEAR_AUTH_JWKS_URI) {
+      try {
+        const jwksUrl = new URL(parsed.data.NEAR_AUTH_JWKS_URI);
+        if (
+          jwksUrl.protocol !== "https:" &&
+          !(nodeEnv !== "production" && jwksUrl.protocol === "http:")
+        ) {
+          issues.push({ variable: "NEAR_AUTH_JWKS_URI", message: "must use HTTPS (HTTP is allowed only outside production)." });
+        }
+      } catch {
+        issues.push({ variable: "NEAR_AUTH_JWKS_URI", message: "must be a valid URL." });
+      }
+    }
+  }
+
   if (issues.length > 0) {
     throw new ConfigValidationError(issues);
   }
@@ -173,5 +207,10 @@ export function loadAppConfig(
     isProduction: nodeEnv === "production",
     port,
     webOrigins,
+    authEnabled,
+    authSessionStore: "memory",
+    nearAuthIssuer: parsed.data.NEAR_AUTH_ISSUER,
+    nearAuthAudience: parsed.data.NEAR_AUTH_AUDIENCE,
+    nearAuthJwksUri: parsed.data.NEAR_AUTH_JWKS_URI,
   };
 }

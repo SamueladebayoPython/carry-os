@@ -34,4 +34,10 @@ export class AppConfigService {
   get webOrigins(): readonly string[] {
     return this.config.webOrigins;
   }
+
+  get authEnabled(): boolean { return this.config.authEnabled; }
+  get authSessionStore(): "memory" { return this.config.authSessionStore; }
+  get nearAuthIssuer(): string | undefined { return this.config.nearAuthIssuer; }
+  get nearAuthAudience(): string | undefined { return this.config.nearAuthAudience; }
+  get nearAuthJwksUri(): string | undefined { return this.config.nearAuthJwksUri; }
 }
