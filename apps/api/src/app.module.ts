@@ -7,6 +7,7 @@ import { ValidationModule } from "./common/validation/validation.module.js";
 import type { AppConfig } from "./config/app-config.js";
 import { AppConfigModule } from "./config/app-config.module.js";
 import { HealthModule } from "./health/health.module.js";
+import { AuthModule } from "./auth/auth.module.js";
 
 @Module({})
 export class AppModule {
@@ -20,6 +21,7 @@ export class AppModule {
         ValidationModule,
         ChainRegistryModule,
         HealthModule,
+        AuthModule,
       ],
     };
   }
