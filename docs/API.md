@@ -10,8 +10,8 @@ proof of identity.
 
 ### `POST /api/auth/near/verify`
 
-Request JSON: `{ "token": "<NEAR Auth identity JWT>" }`. The API validates the
-JWT signature and its configured issuer, audience, subject, and expiry, then
+Send `Authorization: Bearer <NEAR Auth JWT>`. The API validates the JWT
+signature and its configured issuer, audience, subject, and expiry, then
 sets the opaque `carry_session` HttpOnly cookie. The JSON response includes
 `authenticated`, an opaque Carry user ID, a session-bound `csrfToken`, and the
 absolute `expiresAt`. The identity token is never stored.
