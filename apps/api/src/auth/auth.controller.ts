@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Get,
   Headers,
@@ -9,12 +8,10 @@ import {
   Res,
   UnauthorizedException,
 } from "@nestjs/common";
-import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { z } from "zod";
+import { ApiHeader, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { AuthService } from "./auth.service.js";
 
-const verifyBodySchema = z.object({ token: z.string().min(1).max(7_168) }).strict();
 const COOKIE_MAX_AGE_MS = 8 * 60 * 60 * 1000;
 
 interface RequestWithHeaders {
@@ -45,22 +42,21 @@ export class AuthController {
   @Post("near/verify")
   @HttpCode(200)
   @ApiOperation({ summary: "Exchange a NEAR Auth identity JWT for a Carry session" })
-  @ApiBody({
-    schema: {
-      type: "object",
-      required: ["token"],
-      properties: { token: { type: "string", maxLength: 7168 } },
-    },
+  @ApiHeader({
+    name: "Authorization",
+    description: "Bearer <NEAR Auth identity JWT>",
+    required: true,
   })
   @ApiOkResponse({ description: "A Carry session cookie was issued." })
   async verify(
-    @Body() body: unknown,
+    @Headers("authorization") authorization: string | undefined,
     @Headers("origin") origin: string | undefined,
     @Res({ passthrough: true }) response: CookieResponse,
   ) {
-    const parsed = verifyBodySchema.safeParse(body);
-    if (!parsed.success) throw new UnauthorizedException("Invalid identity token.");
-    const result = await this.auth.exchangeToken(parsed.data.token, origin);
+    const match = authorization?.match(/^Bearer ([A-Za-z0-9._~+/-]+=*)$/i);
+    const token = match?.[1];
+    if (!token || token.length > 7_168) throw new UnauthorizedException("Invalid identity token.");
+    const result = await this.auth.exchangeToken(token, origin);
     response.cookie(this.auth.cookieName, result.cookie, {
       httpOnly: true,
       secure: this.auth.isProduction,
