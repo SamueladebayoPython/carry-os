@@ -1,8 +1,8 @@
 # carry os architecture
 
-> **Status:** foundation only. This document describes the intended product and
-> the boundaries for future work. It does not claim that any product workflow,
-> network integration, contract, or database feature is implemented.
+> **Status:** backend and database foundations plus an interactive frontend
+> demo. Frontend sign-in, wallets, NFT data, and transactions are simulated;
+> no live wallet or network integration is connected.
 
 ## 1. Product purpose
 
@@ -77,17 +77,17 @@ authentication belongs to the backend.
 
 | Path | Responsibility | Current status |
 | --- | --- | --- |
-| `apps/web` | Next.js UI, pages, wallet interfaces, NEAR Wallet Selector flow, API integration | Foundation page only |
+| `apps/web` | Next.js UI, pages, wallet interfaces, NEAR Wallet Selector flow, API integration | Interactive mock product demo; real auth, wallet and chain integrations remain planned |
 | `apps/api` | NestJS REST API, session enforcement, ownership verification, discovery, custody coordination, monitoring, chain integrations | Health plus opt-in development/test auth endpoints |
 | `packages/shared` | Shared types and validation contracts used across the workspace | Foundation contracts only |
 | `packages/config` | Shared tooling configuration, currently ESLint | Foundation tooling |
 | `packages/database` | Intended home for Prisma schema/client if the team chooses a package boundary | Does not exist yet |
 | `contracts/` | Intended home for EVM, Solana, and NEAR contract workspaces | Does not exist yet |
 
-A database package was intentionally not created in this foundation task. The
-frontend developer owns the initial Prisma schema and migrations and must
-coordinate the package boundary, schema, and migration workflow before
-implementation.
+A separate database package was not created. Prisma schema and migrations live
+under `apps/api/prisma` and are owned with the backend. The initial schema and
+migration are prepared; validate them against a local PostgreSQL database before
+using them.
 
 ## 5. Product workflow and trust boundaries
 

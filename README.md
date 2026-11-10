@@ -2,10 +2,13 @@
 
 A multichain digital asset custody and utility-preservation platform.
 
-> **Status: repository foundation only.**
+> **Status: backend foundation plus interactive frontend demo.**
 >
-> No blockchain integration, wallet authentication, NFT discovery, custody
-> operation, smart contract, or production database schema is implemented.
+> The frontend demonstrates sign-in, wallet, NFT, custody, beneficiary, and
+> withdrawal flows with simulated data and transactions. No real wallet,
+> authentication, blockchain, custody operation, or smart contract is connected.
+> The initial PostgreSQL schema and migration are prepared but still need local
+> validation before use.
 > Ethereum, Solana, NEAR, and Robinhood Chain are all **planned** networks.
 > Nothing should be described as live or production-ready at this stage.
 
@@ -33,7 +36,7 @@ not be able to override on-chain custody state.
 | Area | Status |
 | --- | --- |
 | pnpm + Turborepo workspace | Foundation implemented |
-| Next.js web application | Foundation implemented |
+| Next.js web application | Interactive mock product UI; real auth, wallets, and chain integrations are not connected |
 | NestJS API with health endpoint | Foundation implemented |
 | OpenAPI/Swagger documentation | Foundation implemented for current endpoints |
 | Shared types and validation contracts | Foundation implemented |

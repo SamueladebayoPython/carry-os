@@ -107,8 +107,8 @@ wallet/session data.
 
 ## 7. Data protection — TBD
 
-Database schema ownership belongs to the frontend developer, but security
-requirements are shared. Before schema implementation, define:
+Database schema and migration ownership belongs to the backend developer, and
+security requirements are shared. Before production use, define:
 
 - data classification and retention;
 - encryption at rest and in transit;
