@@ -23,7 +23,14 @@ export interface AppConfig {
   readonly isTest: boolean;
   readonly isProduction: boolean;
   readonly port: number;
+  readonly databaseUrl?: string;
   readonly webOrigins: readonly string[];
+  readonly authEnabled: boolean;
+  readonly authSessionStore: "database";
+  readonly authCsrfSecret?: string;
+  readonly nearAuthIssuer?: string;
+  readonly nearAuthAudience?: string;
+  readonly nearAuthJwksUri?: string;
 }
 
 function isNodeEnvironment(value: string): value is NodeEnvironment {
@@ -162,6 +169,47 @@ export function loadAppConfig(
     }
   }
 
+  const authEnabled = parsed.data.AUTH_ENABLED === "true";
+  if (parsed.data.AUTH_ENABLED !== "true" && parsed.data.AUTH_ENABLED !== "false") {
+    issues.push({ variable: "AUTH_ENABLED", message: "must be true or false." });
+  }
+  if (parsed.data.AUTH_SESSION_STORE !== "database") {
+    issues.push({ variable: "AUTH_SESSION_STORE", message: "must be database." });
+  }
+  if (authEnabled) {
+    if (!parsed.data.DATABASE_URL) {
+      issues.push({ variable: "DATABASE_URL", message: "is required when AUTH_ENABLED=true." });
+    } else {
+      try {
+        const databaseUrl = new URL(parsed.data.DATABASE_URL);
+        if (databaseUrl.protocol !== "postgresql:" && databaseUrl.protocol !== "postgres:") {
+          issues.push({ variable: "DATABASE_URL", message: "must be a PostgreSQL connection URL." });
+        }
+      } catch {
+        issues.push({ variable: "DATABASE_URL", message: "must be a valid PostgreSQL connection URL." });
+      }
+    }
+    if (!parsed.data.AUTH_CSRF_SECRET || Buffer.byteLength(parsed.data.AUTH_CSRF_SECRET, "utf8") < 32) {
+      issues.push({ variable: "AUTH_CSRF_SECRET", message: "must be at least 32 bytes when AUTH_ENABLED=true." });
+    }
+    for (const variable of ["NEAR_AUTH_ISSUER", "NEAR_AUTH_AUDIENCE", "NEAR_AUTH_JWKS_URI"] as const) {
+      if (!parsed.data[variable]) issues.push({ variable, message: "is required when AUTH_ENABLED=true." });
+    }
+    if (parsed.data.NEAR_AUTH_JWKS_URI) {
+      try {
+        const jwksUrl = new URL(parsed.data.NEAR_AUTH_JWKS_URI);
+        if (
+          jwksUrl.protocol !== "https:" &&
+          !(nodeEnv !== "production" && jwksUrl.protocol === "http:")
+        ) {
+          issues.push({ variable: "NEAR_AUTH_JWKS_URI", message: "must use HTTPS (HTTP is allowed only outside production)." });
+        }
+      } catch {
+        issues.push({ variable: "NEAR_AUTH_JWKS_URI", message: "must be a valid URL." });
+      }
+    }
+  }
+
   if (issues.length > 0) {
     throw new ConfigValidationError(issues);
   }
@@ -172,6 +220,13 @@ export function loadAppConfig(
     isTest: nodeEnv === "test",
     isProduction: nodeEnv === "production",
     port,
+    databaseUrl: parsed.data.DATABASE_URL,
     webOrigins,
+    authEnabled,
+    authSessionStore: "database",
+    authCsrfSecret: parsed.data.AUTH_CSRF_SECRET,
+    nearAuthIssuer: parsed.data.NEAR_AUTH_ISSUER,
+    nearAuthAudience: parsed.data.NEAR_AUTH_AUDIENCE,
+    nearAuthJwksUri: parsed.data.NEAR_AUTH_JWKS_URI,
   };
 }

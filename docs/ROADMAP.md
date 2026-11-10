@@ -49,13 +49,16 @@ that depends on them is implemented.
 
 **Status:** planned. Ownership: frontend flow + backend verification.
 
-- NEAR Wallet Selector frontend integration.
-- Backend verification of NEAR authentication.
-- Session issuance, expiry, revocation, and protected routes.
+- Frontend FastAuth integration is owned outside the backend task.
+- Backend JWT verification and opaque session exchange are implemented as an
+  opt-in development/test slice; production persistence remains outstanding.
+- Session expiry, logout revocation, CSRF token issuance, and a reusable
+  session guard are implemented for development/test.
 - Integration tests for authentication and session behavior.
 
-**Dependencies:** approved challenge/message format, session storage decision,
-database schema for any persisted session state.
+**Dependencies:** frontend confirmation of supported identity JWT handoff;
+confirmed NEAR Auth issuer/audience/JWKS configuration; approved persistent
+session and identity storage design before production use.
 
 ## Phase 3 — External wallet connection and ownership proof
 
@@ -151,8 +154,10 @@ The following are planned but not assigned to a single phase:
 
 - No network integration is implemented.
 - No contract or program is deployed.
-- No wallet authentication exists.
+- No external wallet ownership verification exists. Carry account auth is an
+  opt-in development/test backend slice and is not production-ready.
 - No NFT discovery exists.
 - No database schema or migration exists.
 - No custody operation exists.
-- No API endpoint other than the health check exists.
+- No custody, wallet, or NFT product endpoints exist beyond health and the
+  opt-in development/test auth routes.

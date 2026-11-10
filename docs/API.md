@@ -1,7 +1,52 @@
 # carry os API
 
-> **Status:** only the health endpoint is implemented. Product endpoint
-> contracts are **TBD** and must be agreed before implementation.
+## Authentication (development/test only)
+
+Authentication is disabled by default (`AUTH_ENABLED=false`). After the
+frontend has a supported NEAR Auth identity JWT handoff and the matching
+issuer, audience, and JWKS URL are confirmed, development/test can enable the
+backend session exchange. The API does not accept a NEAR account ID or email as
+proof of identity.
+
+### `POST /api/auth/near/verify`
+
+Send `Authorization: Bearer <NEAR Auth JWT>`. The API validates the JWT
+signature and its configured issuer, audience, subject, and expiry, then
+sets the opaque `carry_session` HttpOnly cookie. The JSON response includes
+`authenticated`, an opaque Carry user ID, a session-bound `csrfToken`, and the
+absolute `expiresAt`. The identity token is never stored.
+
+The browser must send credentials and the allowed `Origin`. For state-changing
+routes protected by `AuthSessionGuard`, send the returned CSRF value in
+`X-CSRF-Token`; the guard enforces it for non-safe HTTP methods.
+Keep it in memory; do not put it in local storage. The session cookie is
+HttpOnly, scoped to `/api` so it reaches protected API routes, and SameSite=Lax.
+The CSRF token is deterministically derived with a separate server-side HMAC
+secret and only its SHA-256 hash is stored with the session. `GET /api/auth/session`
+re-derives the token and verifies it against the stored hash after a page reload.
+
+### `GET /api/auth/session`
+
+Requires the session cookie. Returns the Carry user ID, a CSRF token, and the
+absolute expiry. Activity refreshes the 30-minute idle timer, but not the
+8-hour absolute expiry.
+
+### `POST /api/auth/logout`
+
+Requires the session cookie, allowed `Origin`, and `X-CSRF-Token`. Revokes the
+session and clears the cookie.
+
+### Current limits
+
+User identities and sessions are stored in PostgreSQL through Prisma. The
+session row contains only hashes for the opaque session and CSRF tokens.
+`DATABASE_URL` must be configured when enabling authentication. No `/challenge`
+endpoint is included because FastAuth performs the frontend authentication
+flow; the backend exchanges a signed identity JWT. The FastAuth SDK's exact
+supported token handoff must be verified before enabling this integration.
+
+> **Status:** the health endpoint and the opt-in development/test auth routes
+> above are implemented. Other product endpoint contracts remain **TBD**.
 
 ## 1. Conventions
 
@@ -13,7 +58,7 @@
   Swagger at runtime)
 - Request/response validation: shared contracts from `packages/shared` where
   practical
-- Authentication: not implemented
+- Authentication: opt-in development/test NEAR Auth exchange; disabled by default
 - Versioning: **TBD**
 - Error envelope: **TBD**
 - Pagination: **TBD**
@@ -45,6 +90,13 @@ check the database, blockchain connectivity, provider health, or custody state.
 The response is validated against `healthResponseSchema` in
 `packages/shared/src/health.ts`.
 
+### Authentication endpoints
+
+The opt-in development/test endpoints are documented at the top of this file:
+`POST /api/auth/near/verify`, `GET /api/auth/session`, and
+`POST /api/auth/logout`. They return 503 while `AUTH_ENABLED=false` and are
+not production-ready.
+
 ## 3. Documentation endpoints
 
 | Endpoint | Purpose |
@@ -60,8 +112,8 @@ The following areas are expected but have **no agreed endpoints or schemas**:
 
 | Domain | Owner | Status |
 | --- | --- | --- |
-| NEAR authentication | Backend | Not implemented; contract TBD |
-| Sessions and protected access | Backend | Not implemented; contract TBD |
+| NEAR authentication | Backend | Development/test JWT exchange implemented; token handoff TBD |
+| Sessions and protected access | Backend | PostgreSQL-backed sessions implemented; protected product routes TBD |
 | Wallet connection and ownership proof | Backend | Not implemented; contract TBD |
 | NFT discovery | Backend | Not implemented; contract TBD |
 | Custody deposit coordination | Backend | Not implemented; contract TBD |
@@ -86,6 +138,7 @@ session details.
 
 ## 7. Security
 
-The API currently has no authentication or authorization. Do not expose it as a
-public production service. See [SECURITY.md](SECURITY.md) for the security
-baseline and unresolved controls.
+Authentication is disabled until the FastAuth JWT handoff is confirmed, and no
+product routes currently enforce authorization. Do not expose it as a public
+production service. See [SECURITY.md](SECURITY.md) for the security baseline
+and unresolved controls.

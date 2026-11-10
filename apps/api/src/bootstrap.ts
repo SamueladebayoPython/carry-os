@@ -43,13 +43,16 @@ export async function createApp(
   app.setGlobalPrefix("api");
   app.enableCors({
     origin: [...config.webOrigins],
+    credentials: true,
+    allowedHeaders: ["Authorization", "Content-Type", "X-CSRF-Token", REQUEST_ID_HEADER],
+    methods: ["GET", "POST", "OPTIONS"],
     exposedHeaders: [REQUEST_ID_HEADER],
   });
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle("carry os API")
     .setDescription(
-      "REST API for carry os. Only the health endpoint is currently implemented; product endpoints are not yet defined.",
+      "REST API for carry os, including test-only NEAR Auth session endpoints when enabled.",
     )
     .setVersion(SERVICE_VERSION)
     .build();

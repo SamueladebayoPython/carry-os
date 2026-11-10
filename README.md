@@ -37,8 +37,8 @@ not be able to override on-chain custody state.
 | NestJS API with health endpoint | Foundation implemented |
 | OpenAPI/Swagger documentation | Foundation implemented for current endpoints |
 | Shared types and validation contracts | Foundation implemented |
-| PostgreSQL + Prisma schema | Not implemented — frontend developer ownership, coordination required |
-| NEAR authentication and sessions | Not implemented |
+| PostgreSQL + Prisma schema | Backend-owned schema and initial migration prepared; local PostgreSQL uses Docker Compose |
+| NEAR authentication and sessions | PostgreSQL-backed backend flow implemented; disabled pending FastAuth JWT handoff validation |
 | Wallet connection and ownership proof | Not implemented |
 | NFT discovery | Not implemented |
 | Custody/vault contracts | Not implemented |
@@ -102,6 +102,9 @@ npm install --global pnpm@12.18.0
 
 ```bash
 pnpm install
+Copy-Item .env.example .env
+docker compose up -d postgres
+pnpm --filter @carry-os/api prisma:migrate:dev
 pnpm dev
 ```
 
@@ -144,29 +147,29 @@ Branch protection and required-check configuration are still **TBD**.
 
 ## Environment variables
 
-The API reads variables from the process environment. The repository includes
-`.env.example` as a reference only; automatic `.env` loading is not configured
-yet. Do not commit secrets or private keys.
+The API and Prisma CLI load the root `.env` file. Start from `.env.example` and
+keep local credentials out of commits. Authentication stays disabled until the
+FastAuth token handoff has been tested.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `PORT` | `3001` | NestJS API port |
 | `WEB_ORIGIN` | `http://localhost:3000` | Comma-separated browser origins allowed by CORS |
+| `DATABASE_URL` | Local PostgreSQL URL in `.env.example` | PostgreSQL connection used by Prisma |
+| `AUTH_ENABLED` | `false` | Keep false until the FastAuth JWT handoff is confirmed |
 
-## Database limitation
+## Database setup
 
-Docker and PostgreSQL are not required for this foundation and were not
-available in the implementation environment. No database is running, no Prisma
-schema exists, and no migration has been created. The expected database
-responsibilities are documented in
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) so the frontend developer can own
-the initial schema and migrations after coordination.
+`compose.yaml` provides a local PostgreSQL 17 development database. The Prisma
+schema and initial migration live under `apps/api/prisma` and are owned by the
+backend. Run `docker compose up -d postgres`, then
+`pnpm --filter @carry-os/api prisma:migrate:dev` to apply the migration.
 
 ## Developer ownership
 
 **Frontend developer:** Next.js application, UI and user-facing pages, wallet
-connection interfaces, NEAR Wallet Selector frontend integration, PostgreSQL
-and Prisma schema and migrations, frontend API integration.
+connection interfaces, NEAR Wallet Selector frontend integration, frontend API
+integration, and the real FastAuth testnet login/JWT handoff check.
 
 **Backend developer:** NestJS services and APIs, NEAR authentication
 verification, backend sessions and protected access, wallet ownership
@@ -191,7 +194,8 @@ Ownership boundaries must not be changed without approval. See
 
 ## Scope boundary
 
-This repository currently contains foundation scaffolding only. Do not start
-product features, blockchain integrations, database implementation, or contract
-work until the relevant decisions in [docs/DECISIONS.md](docs/DECISIONS.md) are
-approved.
+This repository currently contains foundation scaffolding and an opt-in
+authentication backend. Do not enable Carry authentication until the FastAuth
+JWT handoff is verified. Product features, blockchain integrations, and
+contract work still require the relevant decisions in
+[docs/DECISIONS.md](docs/DECISIONS.md).

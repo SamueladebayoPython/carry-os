@@ -18,7 +18,35 @@ export const envSchema = z.object({
     emptyStringToUndefined,
     z.string().trim().default(String(DEFAULT_API_PORT)),
   ),
+  DATABASE_URL: z.preprocess(
+    emptyStringToUndefined,
+    z.string().trim().optional(),
+  ),
   WEB_ORIGIN: z.preprocess(
+    emptyStringToUndefined,
+    z.string().trim().optional(),
+  ),
+  AUTH_ENABLED: z.preprocess(
+    emptyStringToUndefined,
+    z.string().trim().default("false"),
+  ),
+  AUTH_SESSION_STORE: z.preprocess(
+    emptyStringToUndefined,
+    z.string().trim().default("database"),
+  ),
+  AUTH_CSRF_SECRET: z.preprocess(
+    emptyStringToUndefined,
+    z.string().optional(),
+  ),
+  NEAR_AUTH_ISSUER: z.preprocess(
+    emptyStringToUndefined,
+    z.string().trim().optional(),
+  ),
+  NEAR_AUTH_AUDIENCE: z.preprocess(
+    emptyStringToUndefined,
+    z.string().trim().optional(),
+  ),
+  NEAR_AUTH_JWKS_URI: z.preprocess(
     emptyStringToUndefined,
     z.string().trim().optional(),
   ),

@@ -27,6 +27,7 @@ test("uses development defaults when optional variables are absent", () => {
   assert.equal(config.isProduction, false);
   assert.equal(config.port, 3001);
   assert.deepEqual(config.webOrigins, ["http://localhost:3000"]);
+  assert.equal(config.authSessionStore, "database");
 });
 
 test("parses explicit test configuration and comma-separated origins", () => {
@@ -63,6 +64,20 @@ test("requires WEB_ORIGIN in production", () => {
   assertConfigError(
     () => loadAppConfig({ NODE_ENV: "production" }),
     "WEB_ORIGIN",
+  );
+});
+
+test("requires PostgreSQL before authentication can be enabled", () => {
+  assertConfigError(
+    () => loadAppConfig({ AUTH_ENABLED: "true" }),
+    "DATABASE_URL",
+  );
+});
+
+test("rejects non-database session storage", () => {
+  assertConfigError(
+    () => loadAppConfig({ AUTH_SESSION_STORE: "memory" }),
+    "AUTH_SESSION_STORE",
   );
 });
 

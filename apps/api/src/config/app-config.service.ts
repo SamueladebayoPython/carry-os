@@ -31,7 +31,18 @@ export class AppConfigService {
     return this.config.port;
   }
 
+  get databaseUrl(): string | undefined {
+    return this.config.databaseUrl;
+  }
+
   get webOrigins(): readonly string[] {
     return this.config.webOrigins;
   }
+
+  get authEnabled(): boolean { return this.config.authEnabled; }
+  get authSessionStore(): "database" { return this.config.authSessionStore; }
+  get authCsrfSecret(): string | undefined { return this.config.authCsrfSecret; }
+  get nearAuthIssuer(): string | undefined { return this.config.nearAuthIssuer; }
+  get nearAuthAudience(): string | undefined { return this.config.nearAuthAudience; }
+  get nearAuthJwksUri(): string | undefined { return this.config.nearAuthJwksUri; }
 }
