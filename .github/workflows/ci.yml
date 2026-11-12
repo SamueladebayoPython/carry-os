@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 'codex/**'
   pull_request:
 
 permissions:
@@ -48,3 +49,22 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+  near-contracts:
+    name: NEAR contract tests and Wasm check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Test contracts
+        run: cargo test --workspace --locked
+
+      - name: Check Wasm targets
+        run: cargo check --workspace --target wasm32-unknown-unknown --locked

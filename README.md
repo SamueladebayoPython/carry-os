@@ -44,11 +44,11 @@ not be able to override on-chain custody state.
 | NEAR authentication and sessions | PostgreSQL-backed backend flow implemented; disabled pending FastAuth JWT handoff validation |
 | Wallet connection and ownership proof | Not implemented |
 | NFT discovery | Not implemented |
-| Custody/vault contracts | Not implemented |
+| NEAR custody/vault contracts | MVP implementation added under `contracts/`; local validation and testnet deployment still required |
 | Beneficiary changes and withdrawals | Not implemented |
 | Ethereum integration | Planned — not implemented |
 | Solana integration | Planned — not implemented |
-| NEAR integration | Planned — not implemented |
+| NEAR integration | Contract workspace implemented for a testnet MVP; web and API integrations and deployment remain outstanding |
 | Robinhood Chain integration | Planned — not implemented |
 | CI workflow | Foundation implemented — install, lint, type-check, build, and tests |
 
@@ -62,6 +62,9 @@ carry-os/
 ├── packages/
 │   ├── config/               # Shared ESLint configuration
 │   └── shared/               # Shared types and validation contracts
+├── contracts/
+│   ├── carry-vault/           # NEP-171 custody and beneficiary rules
+│   └── demo-nft/              # Mintable NEP-171 test collection
 ├── docs/
 │   ├── API.md
 │   ├── ARCHITECTURE.md
