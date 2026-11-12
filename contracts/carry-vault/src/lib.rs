@@ -1,6 +1,5 @@
 use near_contract_standards::non_fungible_token::{
-    core::{ext_nft_core, NonFungibleTokenCore},
-    receiver::NonFungibleTokenReceiver,
+    core::{ext_nft_core, NonFungibleTokenCore, NonFungibleTokenReceiver},
     TokenId,
 };
 use near_sdk::{
@@ -8,7 +7,6 @@ use near_sdk::{
     NearToken, PanicOnDefault, Promise, PromiseOrValue,
     borsh::BorshSerialize,
     collections::{LookupMap, UnorderedSet},
-    serde::{Deserialize, Serialize},
 };
 
 #[near(serializers = [borsh, json])]
@@ -246,8 +244,6 @@ impl CarryVault {
 }
 
 #[near(serializers = [json])]
-#[derive(Deserialize, Serialize)]
-#[serde(crate = "near_sdk::serde")]
 struct DepositMessage {
     beneficiary_id: AccountId,
 }
