@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+/target/
+.turbo/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+apps/api/src/generated/prisma/
+apps/api/generated/prisma/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local tooling and OS files
+.DS_Store
+Thumbs.db
+*.log

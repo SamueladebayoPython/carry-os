@@ -1,0 +1,23 @@
+{
+  "name": "carry-os",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Multichain digital asset custody and utility-preservation platform.",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24.0.0 <25",
+    "pnpm": ">=12.0.0 <13"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "eslint": "9.39.5",
+    "turbo": "2.11.10",
+    "typescript": "6.0.3"
+  }
+}
