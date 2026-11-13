@@ -1,0 +1,31 @@
+{
+  "name": "@carry-os/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared types and validation contracts for carry os.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@carry-os/config": "workspace:*",
+    "@types/node": "24.19.2",
+    "eslint": "9.39.5",
+    "typescript": "6.0.3"
+  }
+}

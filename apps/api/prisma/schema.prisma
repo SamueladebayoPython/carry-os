@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model User {
+  id            String         @id @default(uuid()) @db.Uuid
+  email         String?        @db.VarChar(320)
+  status        UserStatus     @default(ACTIVE)
+  identities    AuthIdentity[]
+  linkedWallets LinkedWallet[]
+  sessions      AuthSession[]
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
+
+  @@index([email])
+}
+
+model AuthIdentity {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  provider      String   @default("near-auth") @db.VarChar(32)
+  issuer        String   @db.VarChar(255)
+  subject       String   @db.VarChar(255)
+  nearAccountId String?  @db.VarChar(128)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+
+  @@unique([issuer, subject])
+  @@index([userId])
+}
+
+model LinkedWallet {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @db.Uuid
+  chain            String    @db.VarChar(24)
+  network          String    @db.VarChar(24)
+  address          String    @db.VarChar(256)
+  // Canonicalized by the chain-specific address normalizer before persistence.
+  normalizedAddress String    @db.VarChar(256)
+  verifiedAt       DateTime? @db.Timestamptz(6)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@unique([chain, network, normalizedAddress])
+  @@index([userId])
+}
+
+model AuthSession {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  tokenHash     String    @unique @db.Char(64)
+  // Only the hash is stored; the API must be able to issue/derive the CSRF
+  // token again from an authenticated session without persisting its raw value.
+  csrfTokenHash String    @db.Char(64)
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  lastSeenAt    DateTime  @default(now()) @db.Timestamptz(6)
+  expiresAt     DateTime  @db.Timestamptz(6)
+  revokedAt     DateTime? @db.Timestamptz(6)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@index([revokedAt])
+}
