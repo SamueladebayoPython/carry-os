@@ -40,7 +40,7 @@ The larger utility-preservation goal is to let a third-party application verify 
 
 ---
 
-## Phase 0 — Repository foundation and one source of truth
+## Phase 0 : Repository foundation and one source of truth
 
 **Status: foundation exists on main; integration and documentation review remain.**
 
@@ -70,7 +70,7 @@ Carry OS combines a web application, backend, database, wallets, and smart contr
 - Each major feature has a clear implementation location and tests.
 - Documentation identifies what is integrated, experimental, and planned.
 
-## Phase 1 — Create a Carry account and sign in with NEAR Auth
+## Phase 1 : Create a Carry account and sign in with NEAR Auth
 
 **Status: authentication/session experiments exist in public branches; the NEAR Auth integration and complete account lifecycle are not yet verified in the integrated product.**
 
@@ -206,7 +206,7 @@ NEAR Auth also makes the onboarding decision part of the product architecture: u
 - NEAR testnet signing works through the documented NEAR Auth flow, and any relayer/delegate-action behavior is verified with transaction evidence.
 - The integration documents testnet configuration and the separate approval/credential requirements for mainnet.
 
-## Phase 2 — Connect wallets and prove ownership
+## Phase 2 : Connect wallets and prove ownership
 
 **Status: wallet verification and linking experiments exist in public branches; full application integration remains.**
 
@@ -248,7 +248,7 @@ Wallet proof prevents a user from linking an address they do not control. It als
 - Replayed, expired, malformed, wrong-chain, and wrong-address proofs fail.
 - Replacing a connected wallet does not silently change vault permissions.
 
-## Phase 3 — Discover NFTs and decide what can be secured
+## Phase 3 : Discover NFTs and decide what can be secured
 
 **Status: limited discovery experiments exist; reliable discovery and eligibility checks remain.**
 
@@ -286,7 +286,7 @@ Users must know which asset they are securing and whether Carry OS can actually 
 - Unsupported or suspicious assets are clearly identified.
 - Deposit preparation checks current chain ownership.
 
-## Phase 4 — Build the NEAR vault: the custody engine
+## Phase 4 : Build the NEAR vault: the custody engine
 
 **Status: NEAR vault contract code and tests exist in a public snapshot; review, integration, deployment, and full lifecycle verification remain.**
 
@@ -329,7 +329,7 @@ Without the vault contract, Carry OS is only an interface for managing informati
 - Unauthorised accounts cannot transfer or withdraw it.
 - Contract tests pass and deployment details are public.
 
-## Phase 5 — Change beneficiary without moving the NFT
+## Phase 5 : Change beneficiary without moving the NFT
 
 **Status: beneficiary logic exists in contract experiments; final authority rules and end-to-end verification remain.**
 
@@ -368,7 +368,7 @@ This is the feature that separates Carry OS from simply transferring NFTs betwee
 - The new beneficiary is recognised by the vault.
 - Reassignment events and transaction details can be independently verified.
 
-## Phase 6 — Withdraw the NFT safely
+## Phase 6 : Withdraw the NFT safely
 
 **Status: withdrawal logic exists in contract experiments; full integrated testnet verification remains.**
 
@@ -406,7 +406,7 @@ A custody system must provide a clear and secure way to leave. Withdrawal rules 
 - Former beneficiaries and unrelated wallets cannot withdraw.
 - The API and UI show completion only after chain verification.
 
-## Phase 7 — Backend API: connect every part of the system
+## Phase 7 : Backend API: connect every part of the system
 
 **Status: NestJS foundation and backend experiments exist; full product integration remains.**
 
@@ -441,7 +441,7 @@ Without orchestration, the frontend, wallet, contract, and database can show dif
 - Duplicate requests do not duplicate custody operations.
 - Pending, failed, and confirmed states are accurate and recoverable.
 
-## Phase 8 — Beneficiary proof and real utility preservation
+## Phase 8 : Beneficiary proof and real utility preservation
 
 **Status: required product capability; implementation planned.**
 
@@ -477,7 +477,7 @@ This is what turns NFT custody into utility preservation. Without it, Carry OS c
 - Old beneficiary proofs stop working after reassignment.
 - The integration is reproducible and its limitations are documented.
 
-## Phase 9 — Database, transaction history, and reliability
+## Phase 9 : Database, transaction history, and reliability
 
 **Status: database schema and complete operational behavior remain to be integrated and verified.**
 
@@ -516,7 +516,7 @@ Users need to see what they secured and what happened over time. Operators need 
 - Reconciliation detects stale or inconsistent records.
 - Database failure cannot silently change or fabricate custody authority.
 
-## Phase 10 — Security, testing, and NEAR testnet release
+## Phase 10 : Security, testing, and NEAR testnet release
 
 **Status: planned.**
 
@@ -547,7 +547,7 @@ A tested NEAR testnet product where the complete lifecycle works and where users
 - Failed operations do not appear as successful.
 - Security findings and known limitations are disclosed.
 
-## Phase 11 — Production readiness and mainnet decision
+## Phase 11 : Production readiness and mainnet decision
 
 **Status: not started; requires explicit approval.**
 
@@ -574,48 +574,198 @@ The operational safeguards required before users trust Carry OS with assets that
 - Monitoring can detect and alert on custody failures.
 - Mainnet deployment is explicitly approved; testnet success alone is not enough.
 
-## Phase 12 — Add other networks
+## Phase 12: Build and verify additional network integrations
 
-**Status: planned. NEAR implementation does not mean other chains are supported.**
+**Status: planned. Carry OS is still in development. NEAR is the first implementation target. Ethereum, Solana, and Robinhood Chain are not currently complete Carry OS integrations.**
 
-Each network needs its own complete implementation. The same product experience can be reused, but wallet signatures, NFT standards, vault programs, transaction finality, and monitoring are chain-specific.
+### Why network support needs separate engineering
 
-### Ethereum
+Carry OS has one product model, but it cannot use one blockchain implementation everywhere. Each network has different account formats, wallet signing methods, NFT standards, transaction execution, contract storage, fees, confirmation behavior, and indexing infrastructure.
 
-- Choose the first EVM network and testnet.
-- Support agreed NFT standards such as ERC-721 and, if required, ERC-1155.
-- Integrate EVM wallet connection and signature verification.
-- Build and test the Solidity vault.
-- Implement deposit, custody record, beneficiary reassignment, and withdrawal.
-- Add EVM transaction monitoring, confirmations, and reorganisation handling.
-- Publish testnet deployment and end-to-end evidence.
+The goal is to reuse the user experience and common application rules without pretending the underlying chains work the same way. A chain adapter translates common Carry OS actions into the correct network-specific operations.
 
-### Solana
+### Phase 12A: Establish the shared multichain foundation
 
-- Select the supported Solana cluster and NFT standards.
-- Integrate Solana wallet connection and message-signature verification.
-- Build the Rust/Anchor program and define its account/PDA custody model.
-- Implement deposit, beneficiary record, reassignment, and withdrawal.
-- Add Solana-specific discovery and transaction confirmation handling.
-- Test and publish program deployment and lifecycle evidence.
+**What it does**
 
-### Robinhood Chain
+The network registry defines the networks Carry OS knows about, the environments available on each network, supported NFT standards, wallet connectors, RPC and indexer configuration, vault addresses, and transaction explorers.
 
-- Confirm the network's architecture, EVM compatibility, token standards, RPC/explorer, and testnet availability before implementation.
-- Select the appropriate wallet and contract tooling based on verified technical details.
-- Build and test its own custody integration.
-- Do not assume Ethereum support automatically means Robinhood Chain support.
+**Work**
 
-### Completion evidence for every network
+- Define a stable internal network identifier for every supported chain and environment.
+- Store configuration separately for local development, testnet, devnet, and mainnet.
+- Define a common asset reference containing network ID, collection or contract address, and token ID.
+- Define shared operation types for discovery, deposit preparation, custody lookup, beneficiary reassignment, and withdrawal.
+- Define a chain adapter interface for wallet connection, ownership proof, NFT reads, transaction preparation, transaction status, and custody reads.
+- Keep network-specific signature verification and contract calls inside their own adapters.
+- Add provider health checks, timeouts, bounded retries, rate limits, and failover rules.
+- Track each operation with its network ID so a transaction cannot accidentally be sent to another chain.
+- Show the active network before a user signs a transaction.
+- Reject unsupported networks and NFT standards rather than guessing how to handle them.
 
-- Wallet connection and ownership proof work on that network.
-- NFT discovery and eligibility checks work for the supported standards.
-- The chain-specific vault/program enforces the same approved custody rules.
-- Deposit, reassignment, and withdrawal pass integration and adversarial tests.
-- Transaction monitoring and explorer evidence are available.
-- The network has its own security review and documented status.
+**Why it matters**
 
----
+Without a network registry and explicit asset identity, the application could display an NFT from one chain while preparing a transaction for another. The shared foundation prevents that mistake and lets Carry OS add networks without mixing their security rules.
+
+**Completion evidence**
+
+- The same Carry account can store wallet links for multiple networks.
+- Each wallet link is associated with the correct network and address format.
+- Every NFT and custody operation is namespaced by its network.
+- The frontend and API reject mismatched network, wallet, asset, and vault combinations.
+- Tests cover unknown networks, wrong chain IDs, unsupported standards, and provider failures.
+
+### Phase 12B: Complete NEAR as the first reference integration
+
+**Purpose**
+
+NEAR is the first network because it is the initial implementation target and the network selected for Carry OS account onboarding and its first vault lifecycle.
+
+**What the NEAR adapter must do**
+
+- Connect a supported NEAR wallet for users who hold NFTs in an existing NEAR account.
+- Keep NEAR Auth account login separate from external wallet connection and ownership proof.
+- Discover supported NEP-171 NFTs and read their collection, token ID, owner, and metadata.
+- Check NEP-145 storage requirements and the receiving vault's ability to accept the NFT.
+- Prepare the correct NEAR NFT transfer or transfer-call flow for the vault.
+- Call the NEAR vault contract and record the original depositor and current beneficiary.
+- Read custody records directly from the contract after transaction confirmation.
+- Reassign the beneficiary under the contract's approved authority.
+- Allow withdrawal only under the current beneficiary rules.
+- Handle transaction outcomes, gas, storage deposits, execution errors, and finality.
+- Publish the testnet contract address, source revision, explorer links, and reproducible test steps.
+
+**Standards and references**
+
+- [NEP-171: Non-Fungible Token standard](https://github.com/near/NEPs/blob/master/neps/nep-0171.md)
+- [NEP-145: Storage Management](https://github.com/near/NEPs/blob/master/neps/nep-0145.md)
+- [NEAR Protocol standards](https://near.github.io/NEPs/)
+
+**Completion evidence**
+
+A tester can sign in, connect an existing NEAR wallet, prove wallet control, discover an eligible NFT, deposit it, verify custody, reassign the beneficiary, prove the old beneficiary has lost the reassigned rights, and withdraw using the currently authorised beneficiary. Each step has test and transaction evidence.
+
+### Phase 12C: Add Ethereum support
+
+**Purpose**
+
+Ethereum support lets users protect eligible NFTs held in EVM wallets without moving them to another network or relying on a wrapped representation.
+
+**What the Ethereum adapter must do**
+
+- Select an Ethereum testnet before mainnet.
+- Connect EVM wallets through a supported provider interface.
+- Identify the active EVM chain using its chain ID and reject unexpected networks.
+- Verify wallet control using a standard message-signing challenge bound to domain, address, chain, nonce, issue time, and expiry.
+- Start with ERC-721 custody. Add ERC-1155 only after the vault supports balances, token IDs, quantities, and batch transfers correctly.
+- Discover NFTs through an indexer or data provider, then verify current ownership and token details against Ethereum state before deposit.
+- Build a Solidity vault that records the token contract, token ID, original depositor, beneficiary, and custody status.
+- Handle ERC-721 approvals and safe transfers. For ERC-1155, handle operator approval and amount-aware transfers.
+- Implement beneficiary reassignment and withdrawal using the approved authority model.
+- Monitor EVM receipts, confirmation depth, failed transactions, and chain reorganisations.
+- Publish the testnet contract, verification data, source revision, and end-to-end evidence.
+
+**Standards and references**
+
+- [ERC-721](https://eips.ethereum.org/EIPS/eip-721)
+- [ERC-1155](https://eips.ethereum.org/EIPS/eip-1155)
+- [EIP-1193: Ethereum Provider JavaScript API](https://eips.ethereum.org/EIPS/eip-1193)
+- [EIP-4361: Sign-In with Ethereum](https://eips.ethereum.org/EIPS/eip-4361)
+
+**Why it matters**
+
+Ethereum assets cannot be deposited into the NEAR vault. They need an EVM contract that can receive the relevant token standard and enforce custody permissions on Ethereum itself.
+
+**Completion evidence**
+
+A user can complete the full lifecycle with an eligible Ethereum testnet NFT. The contract rejects unauthorised beneficiary changes and withdrawals, and the application verifies each result from Ethereum state.
+
+### Phase 12D: Add Solana support
+
+**Purpose**
+
+Solana support extends Carry OS to NFTs held in Solana wallets. It requires a native Solana program because Solana uses accounts and instructions rather than EVM contracts.
+
+**What the Solana adapter must do**
+
+- Select the target cluster, beginning with devnet.
+- Connect wallets using a supported Solana wallet integration.
+- Verify wallet control through a Solana-specific signed challenge and verify the signature against the expected public key.
+- Define the initial supported NFT scope. Evaluate Metaplex Core assets and existing Token Metadata NFTs as separate asset models.
+- Treat compressed NFTs as out of scope for the first release unless a safe custody and proof design is approved.
+- Discover assets using a suitable Solana data provider, then verify ownership and asset details from authoritative account state before deposit.
+- Build a Solana program, likely using Rust and Anchor, with explicit program-derived custody accounts and authority rules.
+- Define how the program receives each supported NFT model and records the original depositor and current beneficiary.
+- Implement beneficiary reassignment and withdrawal through program instructions that enforce the approved authority model.
+- Handle account creation, rent or storage costs, transaction size, compute limits, confirmation status, and failed instructions.
+- Publish the program ID, source revision, devnet explorer links, and reproducible lifecycle tests.
+
+**Standards and references**
+
+- [Metaplex Core](https://www.metaplex.com/docs/smart-contracts/core)
+- [Metaplex Token Metadata](https://www.metaplex.com/docs/smart-contracts/token-metadata)
+- [Solana token metadata documentation](https://solana.com/docs/tokens/metaplex)
+
+**Why it matters**
+
+A Solana NFT is not an ERC-721 token and cannot be handled by an EVM vault. Solana custody must respect its account ownership, token program, metadata, and program-derived address model.
+
+**Completion evidence**
+
+A tester can connect a Solana wallet, discover an NFT from an explicitly supported standard, deposit it into the Solana program, verify the custody account, reassign the beneficiary, and withdraw it under the program's permission rules.
+
+### Phase 12E: Add Robinhood Chain support
+
+**Purpose**
+
+Robinhood Chain gives Carry OS an additional EVM-compatible network target. It is designed as an Ethereum-compatible Layer 2, so Solidity contracts and standard EVM tooling can be used. This reduces the need to invent an entirely different contract language, but it does not remove the need for a separate deployment and verification.
+
+**What the Robinhood Chain adapter must do**
+
+- Start on Robinhood Chain testnet before any mainnet deployment.
+- Configure the testnet chain ID, RPC endpoint, explorer, and ETH gas token from official developer documentation.
+- Recheck the official chain IDs and endpoints during deployment rather than relying on copied configuration.
+- Connect EVM-compatible wallets and confirm that the active chain is Robinhood Chain.
+- Reuse the reviewed EVM wallet-proof approach and Solidity vault code only after checking chain-specific assumptions and dependencies.
+- Deploy a separate vault instance with its own address, configuration, access controls, and operational monitoring.
+- Support the same approved NFT standards selected for the Ethereum adapter.
+- Verify NFT ownership and custody state against Robinhood Chain, not Ethereum.
+- Monitor transactions, receipts, confirmations, and provider health on Robinhood Chain.
+- Publish testnet contract addresses, source revision, explorer links, and end-to-end evidence.
+
+**Official references**
+
+- [Robinhood Chain developer documentation](https://docs.robinhood.com/chain/)
+- [Connecting to Robinhood Chain](https://docs.robinhood.com/chain/connecting/)
+- [Deploying smart contracts](https://docs.robinhood.com/chain/deploy-smart-contracts/)
+
+**Why it matters**
+
+EVM compatibility makes tooling and contract reuse possible, but Ethereum and Robinhood Chain remain separate networks. A contract deployed on Ethereum does not automatically exist on Robinhood Chain. Wallet configuration, chain IDs, RPC access, gas, deployment, indexing, monitoring, and security verification must be handled independently.
+
+**Completion evidence**
+
+A tester can use a Robinhood Chain testnet NFT to complete deposit, custody verification, beneficiary reassignment, and withdrawal. The UI and API must show Robinhood Chain as the active network and use its own contract and transaction evidence.
+
+### Rules for adding any future network
+
+A new network must not be enabled just because a wallet can connect or an NFT can be displayed.
+
+Before a network is marked supported, Carry OS must have:
+
+1. A documented network and environment configuration.
+2. A wallet connector and chain-specific ownership verifier.
+3. NFT discovery for explicitly supported standards.
+4. An authoritative ownership and eligibility check before deposit.
+5. A deployed custody contract or program on that network.
+6. Deposit, custody record, beneficiary reassignment, and withdrawal.
+7. Backend monitoring and recovery for pending, failed, and reorganised transactions.
+8. Security tests for forged signatures, replay, unauthorised actions, and incorrect network selection.
+9. A reproducible testnet demonstration with explorer evidence.
+10. A separate security and release decision before mainnet support.
+
+Do not bridge an NFT to another chain as a shortcut for native custody. Cross-chain bridging introduces a different trust model and is not part of the initial multichain custody promise.
+
 
 ## Cross-cutting requirements
 
