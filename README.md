@@ -4,7 +4,7 @@
 
 Carry OS (Carry Ownership Security) is a multichain digital asset custody and utility-preservation platform. It is being developed to help users protect valuable NFTs in dedicated blockchain vaults while retaining access to the benefits associated with those NFTs through an authorised beneficiary wallet.
 
-Carry OS separates **where an NFT is held** from **which wallet is authorised to benefit from it**. The NFT remains in custody while the authorised beneficiary can continue using supported utility. If the user wants to sell or transfer the NFT, they must first withdraw it to the authorised wallet.
+Carry OS separates **where an NFT is held** from **which wallet is authorised to benefit from it**. The NFT remains in custody while the authorised beneficiary can continue using supported utility. If the user wants to sell or transfer the NFT, they must first withdraw or it called sell to the authorised wallet.
 
 > **development status:** Carry OS is in active development. The GitHub repository contains the product architecture, implementation foundations, prototypes, backend and database work, and NEAR vault experiments. Substantial backend and database foundations have been developed in separate branches. The components are not yet one fully integrated, production-ready custody service. Authentication, wallet verification, contract deployment, beneficiary verification, and the complete deposit-to-withdrawal journey still require integration and testing.
 
