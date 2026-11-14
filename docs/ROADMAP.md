@@ -1,5 +1,7 @@
 # carry os roadmap
 
+> **Development status:** Carry OS is still in active development. This roadmap includes planned capabilities and future integrations. It is not a statement that those features are already implemented, deployed, or available to users.
+>
 > **Purpose:** this roadmap explains what must be built, what each part does, why the system needs it, and how we will know it works. It covers the complete product, including features that have not yet been implemented.
 >
 > **Delivery strategy:** build one complete, verifiable NEAR testnet experience first. Add Ethereum, Solana, and Robinhood Chain as separate integrations after the first lifecycle is secure and reliable.
