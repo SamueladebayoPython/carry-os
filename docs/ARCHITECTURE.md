@@ -1,6 +1,8 @@
 # carry os architecture
 
-> **Purpose:** this document explains what each part of carry os is responsible for, how information and authority move through the system, and what must be built for the product to work. It describes the target architecture, not a claim that every component is already integrated or deployed.
+> **Development status:** Carry OS is still in active development. This document describes the intended architecture. Some components exist as prototypes or separate branch experiments, while other components remain planned. It does not claim that the complete system is integrated, deployed, or production-ready.
+>
+> **Purpose:** this document explains what each part of carry os is responsible for, how information and authority move through the system, and what must be built for the product to work.
 
 **Product:** carry os is a multichain NFT custody and utility-preservation platform. It separates the wallet that holds an NFT from the wallet currently authorised to benefit from it.
 
