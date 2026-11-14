@@ -2,7 +2,7 @@
 
 > **Purpose:** this document defines the security model, trust boundaries, threats, and controls required to protect Carry OS accounts, connected wallets, NFT custody, and beneficiary rights.
 >
-> **Implementation status:** the requirements below describe the intended system. Authentication, wallet verification, backend controls, and vault code exist in separate public branches or snapshots, but that does not mean they are integrated, deployed, or independently verified as one secure product. Treat a control as implemented only when its integrated code, tests, and environment evidence are available.
+> **Development status:** Carry OS is still in active development. The requirements below describe the intended security model, not a claim that the product is production-ready. Authentication, wallet verification, backend controls, and vault code exist in separate public branches or snapshots, but that does not mean they are integrated, deployed, or independently verified as one secure product. Treat a control as implemented only when its integrated code, tests, and environment evidence are available.
 
 ## 1. Security objective
 
@@ -133,8 +133,20 @@ The wallet signs the exact challenge using the chain's supported signing method.
 - Do not treat a connected-wallet event from the browser as proof.
 - Require a fresh proof when a wallet is linked or replaced.
 
-NEAR Auth login does not prove ownership of Ethereum, Solana, or Robinhood Chain wallets. Each requires its own proof.
+### Network-specific wallet verification
 
+The verification method must match the network. Carry OS must not accept one chain's signature as proof of control over an address on another chain.
+
+| Network | Verification requirement | Security consideration |
+| --- | --- | --- |
+| NEAR | Verify the signature or authentication proof using the selected NEAR wallet protocol and expected NEAR account | Keep NEAR Auth login separate from proof that an external NEAR wallet controls an NFT |
+| Ethereum | Verify a domain-bound, nonce-protected EVM message signature against the expected address and chain context | Prevent replay across Carry OS domains, accounts, and chains. Use a standard such as Sign-In with Ethereum where appropriate |
+| Solana | Verify the exact challenge signature against the expected Solana public key using the selected wallet signing method | Do not interpret an EVM address or signature as a Solana identity |
+| Robinhood Chain | Verify EVM wallet signatures with Robinhood Chain's chain context and configured network ID | Do not accept a proof created for Ethereum as proof that the same address approved an action on Robinhood Chain |
+
+For every network, the backend must validate the challenge purpose, account binding, network identifier, nonce, issue time, expiry, and signature. The challenge must be single-use. Transaction approval remains a separate wallet action.
+
+NEAR Auth login does not prove ownership of Ethereum, Solana, or Robinhood Chain wallets. Each requires its own proof.
 ## 6. Carry sessions and browser security
 
 ### Threats
@@ -163,7 +175,7 @@ An attacker may try to withdraw an NFT, change its beneficiary, deposit an unsup
 
 ### Required contract rules
 
-The NEAR vault must enforce custody permissions itself:
+The first NEAR vault must enforce custody permissions itself. Future Ethereum, Solana, and Robinhood Chain vaults or programs must enforce equivalent product rules using their own chain-specific security model. A shared API rule is not a substitute for on-chain enforcement:
 
 - Accept only supported NFT standards and approved collection policies.
 - Verify the incoming token and prevent duplicate custody records.
@@ -326,13 +338,14 @@ Before mainnet or meaningful-value custody, obtain an independent smart-contract
 
 ## 15. Current security status and known gaps
 
-Public repository branches contain authentication/session experiments, wallet-verification code, and NEAR vault contract work. These are development artifacts, not proof that the complete security model is integrated or deployed.
+Carry OS remains in active development. Public repository branches contain authentication/session experiments, wallet-verification code, frontend prototypes, and NEAR vault contract work. These are development artifacts, not proof that the complete security model is integrated or deployed. NEAR is the first implementation target. Ethereum, Solana, and Robinhood Chain remain planned and have no verified Carry OS custody deployment.
 
 Until the relevant implementation and evidence are available, the following must remain unclaimed:
 
 - production-ready NEAR Auth integration;
 - complete account recovery and session revocation;
 - wallet ownership verification across all supported networks;
+- network-specific vault deployments and independent custody verification for Ethereum, Solana, and Robinhood Chain;
 - a deployed and independently reviewed production vault;
 - verified beneficiary reassignment and withdrawal on testnet;
 - a production utility-entitlement proof system;
@@ -349,6 +362,8 @@ Record decisions in [DECISIONS.md](DECISIONS.md) before dependent implementation
 - Carry session architecture, expiry, renewal, and revocation;
 - account recovery and identity-provider account-change behavior;
 - wallet challenge format and verification library for each chain;
+- supported NFT standards and custody implementation scope for each network;
+- chain-specific RPC, indexer, finality, and transaction-reconciliation providers;
 - original depositor recovery if the wallet is lost;
 - beneficiary destination rules;
 - contract upgrade, pause, and emergency authority;
