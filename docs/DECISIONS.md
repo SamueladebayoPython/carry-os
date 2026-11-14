@@ -11,15 +11,39 @@
 - **D-001 — Product scope.** carry os is a multichain digital asset custody and
   utility-preservation platform supporting the ten-step workflow in
   [ARCHITECTURE.md](ARCHITECTURE.md).
-- **D-002 — Planned networks.** Ethereum, Solana, NEAR, and Robinhood Chain are
-  planned. No network is implemented.
+- **D-002 — Network order.** NEAR is the first implementation target, beginning
+  on NEAR testnet. Ethereum, Solana, and Robinhood Chain are planned for later
+  phases. This is a development priority, not a claim that any network is fully
+  integrated or production-ready.
 - **D-003 — Testnet-first.** Development and validation begin on testnets.
   Mainnet requires a separate readiness decision.
 - **D-004 — Custody source of truth.** Blockchain vault/program state is the
-  authoritative record of custody.
+  authoritative record of custody. Database records and frontend state may
+  describe or index custody, but cannot prove that an asset was deposited.
 - **D-005 — Developer ownership.** Frontend, backend, and shared
   responsibilities are fixed as documented in [ARCHITECTURE.md](ARCHITECTURE.md).
   Changes require approval.
+- **D-018 — Utility while in custody.** A supported utility NFT should remain
+  usable by its currently authorised beneficiary while the NFT stays inside the
+  Carry vault. The intended design separates NFT custody from beneficiary
+  rights. This does not guarantee compatibility with every third-party
+  application; each integration must support a way to verify the beneficiary.
+- **D-019 — Connected wallet and beneficiary are separate.** Connecting or
+  disconnecting an external wallet must not silently change the NFT's recorded
+  beneficiary. Beneficiary changes require a separate authorised action.
+- **D-020 — External sale flow.** An NFT held in a Carry vault cannot be sold or
+  freely transferred through an external marketplace while it remains in
+  custody. The authorised beneficiary must first withdraw it to an eligible
+  wallet, then use the external marketplace. An internal Carry marketplace is
+  not part of the approved scope.
+
+### Identity and access
+
+- **D-021 — Carry account sign-in.** NEAR Auth is the intended authentication
+  method for creating and accessing a Carry account. It is separate from
+  connecting an external wallet and does not, by itself, prove ownership of an
+  NFT in that wallet. The backend identity-token handoff and session flow remain
+  experimental and must be verified before being treated as implemented.
 
 ### Repository and technology
 
@@ -59,31 +83,47 @@ foundation task:
 
 ### Network and chain scope
 
-- **TBD: First implementation network and testnet.** Ethereum is a likely
-  candidate, but this is not approved.
-- **TBD: Supported NFT/token standards** on each network.
+- **TBD: NEAR testnet NFT standards and supported asset types** for the first
+  implementation.
+- **TBD: RPC and indexer providers** for NEAR, including rate limits and
+  failover policy.
+- **TBD: Confirmation/finality and reorg policy** for each supported network.
+- **TBD: Ethereum, Solana, and Robinhood Chain implementation details**, to be
+  resolved when each network enters active development. This includes
+  standards, wallet support, RPC/indexer providers, and testnet environments.
 - **TBD: Robinhood Chain technical details**, including EVM compatibility,
   RPC/explorer, token standards, and testnet availability.
-- **TBD: RPC/indexer providers** and failover policy per network.
-- **TBD: Confirmation/finality and reorg policy** per network.
 
 ### Custody and contracts
 
-- **TBD: Vault/program architecture** — one vault per asset, per user, factory
+- **TBD: Vault architecture** — one vault per asset, per user, factory
   deployment, or another model.
 - **TBD: Contract upgradeability and administrative powers.**
 - **TBD: Emergency pause, recovery, and incident authority.**
-- **TBD: Beneficiary representation and change rules**, including timelocks,
-  confirmation steps, and dispute handling.
+- **TBD: Exact beneficiary authority rules**, including who may assign or
+  replace a beneficiary, whether the original depositor retains that power
+  after reassignment, and any timelocks, confirmations, or dispute process.
 - **TBD: Withdrawal authorisation model** — which signatures and on-chain
   checks are required.
 - **TBD: Signing/key-management architecture**, including whether MPC, HSM, or
   another model is used.
 - **TBD: Contract audit scope and deployment approval process.**
 
+### Utility verification
+
+- **TBD: Beneficiary verification mechanism** for applications that recognise
+  Carry-held NFTs. The first implementation should include a reference
+  application or integration that demonstrates benefit access while the NFT
+  remains in the vault.
+- **TBD: Integration interface and proof format**, including how an application
+  checks the current beneficiary and how it handles revoked or reassigned
+  rights.
+- **TBD: Utility session expiry, caching, and revocation behaviour** so an old
+  beneficiary cannot keep using a benefit after reassignment.
+
 ### Identity and sessions
 
-- **TBD: NEAR authentication message format and verification procedure.**
+- **TBD: NEAR Auth identity-token format and backend verification procedure.**
 - **TBD: Backend session storage, lifetime, rotation, and revocation.**
 - **TBD: Challenge format and ownership-proof standards per wallet/network.**
 - **TBD: Linking a NEAR identity to external wallet addresses.**
@@ -121,3 +161,10 @@ When an open decision is resolved:
    documents.
 3. Do not update implementation or documentation to claim completion before
    tests and review are complete.
+
+## 5. Decision history
+
+- **2026-11-14:** Clarified NEAR testnet as the first implementation target;
+  recorded utility preservation, beneficiary/wallet separation, external
+  marketplace withdrawal flow, and NEAR Auth's intended account-sign-in role.
+  Kept implementation-specific security and integration choices open.
