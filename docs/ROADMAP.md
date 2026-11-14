@@ -70,45 +70,141 @@ Carry OS combines a web application, backend, database, wallets, and smart contr
 - Each major feature has a clear implementation location and tests.
 - Documentation identifies what is integrated, experimental, and planned.
 
-## Phase 1 — Carry account and secure sign-in
+## Phase 1 — Create a Carry account and sign in with NEAR Auth
 
-**Status: authentication/session experiments exist in public branches; the final integrated sign-in flow is not yet verified.**
+**Status: authentication/session experiments exist in public branches; the NEAR Auth integration and complete account lifecycle are not yet verified in the integrated product.**
 
 ### What we are building
 
-A Carry account is the user's identity inside Carry OS. It gives the user a stable place to return to, view linked wallets, and manage their custody records even when the wallet they use every day changes.
+Carry OS will use **NEAR Auth as its primary sign-up and sign-in method**. A new user should be able to create a Carry account and access the product using a familiar identity method, without first installing a browser wallet, writing down a seed phrase, or manually creating a NEAR account.
 
-The selected NEAR authentication approach is intended to provide the sign-in experience, with passkey-friendly access where supported. The exact provider and protocol must be confirmed before it is treated as final.
+NEAR Auth connects familiar authentication methods to a real NEAR account. Its current sign-in options include Google, Apple, email/password, and passkeys. The identity flow is powered by Auth0, while NEAR's MPC infrastructure derives and uses the account's signing key without one party holding the complete private key.
 
-### What the NEAR authentication proof does
+This is why NEAR Auth fits Carry OS: it reduces the first-use barrier while giving the product a NEAR-native account and signing path for its first supported network. It is not simply a Google login placed in front of a separate wallet setup. The authentication identity is used by NEAR Auth to resolve the user's NEAR account.
 
-A NEAR authentication signature or provider-issued proof establishes that the user controls or has authenticated through the NEAR identity accepted by the chosen protocol. The backend verifies that proof and creates a Carry session.
+Official integration reference: [NEAR Auth](https://auth.near.org/).
 
-The session tells the API which Carry account is making a request. It does not prove control of every external wallet and does not authorise an NFT withdrawal by itself.
+### What the user experience should look like
+
+The first screen should clearly offer **Create account** and **Log in**.
+
+**First-time user: create account**
+
+1. The user opens Carry OS and selects **Create account**.
+2. Carry OS opens the NEAR Auth sign-up experience.
+3. The user chooses a supported method, such as Google, Apple, email/password, or passkey.
+4. The identity provider authenticates the user and returns a signed JWT containing a stable subject identifier.
+5. NEAR Auth uses the verified identity with its configured guard and MPC infrastructure to derive the user's NEAR account identity and signing capability.
+6. The NEAR Auth flow provisions or resolves the corresponding NEAR account. The user should not have to create a separate wallet manually as part of normal onboarding.
+7. Carry OS receives the authentication result, verifies it according to the official SDK and backend integration requirements, and creates the user's Carry profile.
+8. The user enters an empty Carry dashboard. They can then connect an existing NFT wallet as a separate step.
+
+**Returning user: log in**
+
+1. The user selects **Log in**.
+2. Carry OS starts the same NEAR Auth provider flow.
+3. The user authenticates with the same identity method and identity they used previously.
+4. NEAR Auth resolves that identity to the same NEAR account through its deterministic identity-to-account derivation.
+5. Carry OS verifies the authentication result and finds the existing Carry profile associated with that verified identity.
+6. The backend creates or resumes the user's Carry session and returns the user to their dashboard, including their linked wallets and custody records.
+
+The sign-up and login screens may use the same provider component, but Carry OS must distinguish a first-time identity from an existing account. It must not create duplicate Carry profiles every time a returning user authenticates.
+
+### How NEAR Auth works behind the sign-in screen
+
+The intended integration follows this sequence:
+
+1. **Authenticate:** the user signs in through the configured Auth0-backed method. Auth0 issues a JWT with a subject claim identifying that authenticated user.
+2. **Verify identity:** the NEAR Auth contract routes the JWT to the configured guard, which validates the issuer and token according to its rules.
+3. **Derive the NEAR account signing path:** after successful verification, NEAR Auth derives a deterministic identity path from the guard and subject. The same verified identity resolves to the same NEAR account.
+4. **Use MPC signing:** NEAR's MPC network collaboratively derives and uses the signing key. No single MPC participant reconstructs or holds the complete private key.
+5. **Authorise NEAR actions:** when the user approves a supported NEAR action, the SDK obtains the required fresh authentication material and creates the appropriate signed action. For gas-sponsored delegate actions, the configured relayer submits the NEP-366 meta-transaction and pays network gas according to the integration configuration.
+6. **Verify and record in Carry OS:** the Carry backend validates the authentication result it receives, maps the verified identity to the correct Carry profile, and manages its own application session.
+
+The exact SDK calls, JWT audience, guard configuration, relayer settings, network selection, and backend verification must follow the current NEAR Auth developer documentation. Do not invent a custom token-verification scheme or assume that a normal login JWT can be reused indefinitely to sign transactions.
+
+### What Carry OS stores for the account
+
+Carry OS should maintain its own application profile linked to the verified NEAR Auth identity. The profile is used for Carry-specific data such as:
+
+- stable Carry account identifier;
+- verified NEAR Auth identity reference and NEAR account ID;
+- account creation and last-login timestamps;
+- linked external wallet records;
+- NFT custody records and operation history;
+- account preferences and security settings.
+
+Carry OS should store the minimum identity reference needed to map a verified NEAR Auth login to the same Carry profile. It must not store the user's password, seed phrase, private key, or raw bearer tokens.
+
+The NEAR account identity and Carry profile are related but distinct. NEAR Auth provides the authentication and NEAR account layer; Carry OS maintains the product profile, linked-wallet relationships, and application records.
+
+### Why we use NEAR Auth instead of making users start with a wallet
+
+- **Lower onboarding friction:** users can start with a familiar login method instead of learning seed phrases and wallet extensions before seeing the product.
+- **A NEAR account is part of the flow:** the user gets a NEAR-native identity and signing path, which is useful because NEAR is Carry OS's first custody network.
+- **Passkey support:** users can choose passkey authentication where supported, reducing dependence on passwords.
+- **Consistent NEAR identity:** the same supported identity resolves to the same NEAR account across NEAR Auth-integrated applications using the same identity configuration.
+- **A path to sponsored transactions:** NEAR Auth supports NEP-366 delegate actions through a configured relayer, allowing Carry OS to design a gas-sponsored NEAR experience where the relayer configuration and product economics support it.
+- **Separation of responsibilities:** NEAR Auth handles the NEAR sign-in/account path, while Carry OS handles its own user profile, linked wallets, custody records, and product permissions.
+
+### Important distinction: NEAR Auth login is not external wallet ownership
+
+NEAR Auth signs the user into Carry OS and provides a NEAR account signing path. It does not automatically prove that the user controls an existing Ethereum, Solana, or other external wallet.
+
+A user may sign in with NEAR Auth and then connect a separate wallet that holds NFTs. That external wallet must complete its own chain-specific ownership proof. If the user wants to deposit an NFT from that wallet, the wallet must also approve the deposit transaction.
+
+Likewise, a successful Carry login does not by itself authorise beneficiary reassignment or NFT withdrawal. Those operations must satisfy the vault's on-chain permission rules and require the appropriate transaction approval.
 
 ### Work
 
-- Implement the sign-in and account creation flow.
-- Verify the authentication result on the backend, including its issuer, intended audience, account identity, expiry, and replay protections required by the selected protocol.
-- Map the verified identity to one Carry account so repeated sign-ins return to the same account.
-- Create a protected session with a defined expiry, renewal, and revocation policy.
-- Require a valid session for account-specific API operations.
-- Implement sign-out and invalidate the session.
-- Protect browser sessions against CSRF, session fixation, unsafe cookie settings, and overly broad CORS.
-- Define recovery if a user loses access to the NEAR authentication method.
-- Require fresh authentication or an additional proof for high-risk account changes when appropriate.
+**Frontend and onboarding**
+
+- Integrate the official NEAR Auth React SDK/provider into the Next.js application, following the supported setup for the selected environment.
+- Configure the Auth0 domain, client ID, audience, and NEAR network using environment variables; never expose private credentials.
+- Build distinct **Create account** and **Log in** entry points that launch the NEAR Auth flow.
+- Present the supported sign-in methods supplied by NEAR Auth rather than building a parallel password system.
+- Handle successful login, cancellation, provider errors, expired authentication, and network failures.
+- After first authentication, create the Carry profile and take the user to an empty dashboard.
+- On later authentication, load the existing Carry profile and its data instead of creating another account.
+- Keep connecting an external NFT wallet as a separate, clearly labelled action after account entry.
+- Provide sign-out and a clear way to return to the login screen.
+
+**Backend identity and session**
+
+- Verify the NEAR Auth authentication result using the documented issuer, signing keys, audience, subject, expiry, and other required claims.
+- Reject forged, expired, malformed, wrong-audience, or otherwise invalid authentication results.
+- Map the verified identity to one stable Carry profile using a unique identity key; prevent duplicate accounts and account-linking collisions.
+- Create a Carry OS session after successful verification, with explicit expiry, renewal, logout, and revocation behavior.
+- Protect account-specific API routes by checking the Carry session on the server.
+- Do not trust a NEAR account ID, email address, or user ID supplied by the browser unless it matches verified claims.
+- Keep raw JWTs, cookies, and session credentials out of application logs and persistent user-profile fields.
+- Define what happens if the user changes their Auth0 login method, loses access to the identity provider, or requests account recovery.
+
+**NEAR Auth and transaction configuration**
+
+- Start integration on NEAR testnet using the testnet SDK configuration and credentials.
+- Confirm the required Auth0 application settings, JWT audience, guard, NEAR Auth contracts, RPC endpoint, and relayer configuration.
+- Use the NEAR Auth SDK's supported signing and delegate-action flow for NEAR transactions.
+- Decide which Carry OS actions should use sponsored NEP-366 transactions and which require another payment model.
+- Confirm mainnet application approval and production credentials before planning a mainnet release; testnet access does not imply mainnet approval.
+- Document provider dependencies, relayer availability, rate limits, costs, and failure behavior.
 
 ### Why it matters
 
-Without a secure Carry identity, the system cannot reliably know which account is requesting wallet linking or viewing custody records. Authentication must also remain separate from blockchain ownership: signing in must not give the account automatic control over an NFT.
+The account is the user's entry point into Carry OS. Without a stable sign-up and login flow, users cannot reliably return to their dashboard or manage their linked wallets and custody records.
+
+NEAR Auth also makes the onboarding decision part of the product architecture: users get a familiar way to enter, while Carry OS starts with a NEAR-native account and transaction path. Keeping this separate from external wallet verification and vault permissions prevents a login session from becoming an accidental custody authority.
 
 ### Completion evidence
 
-- A valid user can create or access their Carry account.
-- The backend, not the browser, verifies the authentication proof.
-- Expired, forged, wrong-audience, and replayed proofs are rejected.
-- Sessions expire and can be revoked.
-- Tests cover sign-in, sign-out, expiry, renewal, and account recovery behavior.
+- A first-time user can select **Create account**, complete NEAR Auth, and receive one Carry profile linked to the verified NEAR identity.
+- A returning user can select **Log in** and reach the same Carry profile and NEAR account.
+- Repeating login does not create duplicate Carry profiles.
+- Invalid, expired, forged, and wrong-audience authentication results are rejected by the backend.
+- A user can sign out, and the Carry session is invalidated according to the session policy.
+- The user reaches the dashboard before being asked to connect an external NFT wallet.
+- NEAR testnet signing works through the documented NEAR Auth flow, and any relayer/delegate-action behavior is verified with transaction evidence.
+- The integration documents testnet configuration and the separate approval/credential requirements for mainnet.
 
 ## Phase 2 — Connect wallets and prove ownership
 
