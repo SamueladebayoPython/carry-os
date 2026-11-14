@@ -1,178 +1,206 @@
 # carry os
 
-**protect the utility behind your NFTs, even when your everyday wallet changes.**
+**secure your utility NFTs without giving up the benefits they provide.**
 
-carry os is a multichain digital asset custody and utility-preservation platform. it is designed to let people move valuable utility NFTs out of everyday wallets and into dedicated chain-specific vaults, then manage who is entitled to use or withdraw those assets without repeatedly moving the NFT between personal wallets.
+Carry OS (Carry Ownership Security) is a multichain digital asset custody and utility-preservation platform. It is being developed to help users protect valuable NFTs in dedicated blockchain vaults while retaining access to the benefits associated with those NFTs through an authorised beneficiary wallet.
 
-> **development status:** carry os is still in active development. it is a prototype and a collection of implementation branches and experiments, not a production custody service. the complete user journey has not been verified as one integrated, live on-chain system. planned capabilities must not be confused with implemented or deployed features.
+Carry OS separates **where an NFT is held** from **which wallet is authorised to benefit from it**. The NFT remains in custody while the authorised beneficiary can continue using supported utility. If the user wants to sell or transfer the NFT, they must first withdraw it to the authorised wallet.
+
+> **development status:** Carry OS is in active development. The GitHub repository contains the product architecture, implementation foundations, prototypes, backend and database work, and NEAR vault experiments. Substantial backend and database foundations have been developed in separate branches. The components are not yet one fully integrated, production-ready custody service. Authentication, wallet verification, contract deployment, beneficiary verification, and the complete deposit-to-withdrawal journey still require integration and testing.
 
 ---
 
 ## the problem
 
-people use NFTs for more than collecting images. an NFT can represent:
+NFTs are no longer limited to digital collectibles. They can represent access, membership, ownership, and other useful privileges.
 
-- membership in a community or private network
-- access to events, experiences, or gated content
-- in-game items and digital equipment
-- a domain name or digital identity
-- credentials, achievements, or proof of participation
-- benefits, discounts, loyalty points, or other token-gated privileges
+An NFT may provide:
 
-these assets can carry value beyond their resale price. losing access to the wallet that holds one can mean losing the asset and the utility attached to it.
+- membership in a community or private network;
+- access to events, experiences, or gated content;
+- in-game items and digital equipment;
+- domain names and digital identity;
+- credentials, achievements, or proof of participation;
+- discounts, rewards, loyalty benefits, and other token-gated privileges.
 
-everyday wallets are used for many activities: trading, minting, connecting to unfamiliar applications, signing transactions, and interacting with smart contracts. that creates exposure. a compromised wallet can put every asset it controls at risk, including NFTs that represent memberships, access, or other ongoing benefits.
+These assets can have value beyond their resale price. Losing the wallet that holds one can also mean losing the asset and the benefits attached to it.
 
-moving an NFT to a new wallet is not always a complete solution. it can be inconvenient, and applications that check the NFT's direct owner may stop recognising the new holder. custody therefore needs to address both asset control and the way an authorised person proves their entitlement.
+People use everyday wallets for many blockchain activities, including trading, minting, connecting to applications, signing transactions, and approving smart contract permissions. A compromised wallet or malicious approval can put the assets it controls at risk.
 
-## the carry os approach
+Moving an NFT into another wallet can reduce exposure, but it may introduce a second problem. Some applications check the NFT's direct on-chain owner when deciding who receives its benefits. If the NFT is held by a separate custody contract, those applications may no longer recognise the person who is entitled to use it.
 
-carry os separates **where an NFT is held** from **who is authorised to benefit from it**.
+**Protecting an NFT should not mean losing access to what makes that NFT valuable.**
 
-a user deposits an eligible NFT into a dedicated carry vault on its native blockchain. the vault records the original depositor and the currently authorised beneficiary. the depositor can reassign the beneficiary when control needs to move to another wallet. the beneficiary can withdraw the NFT according to the vault's rules.
+## how Carry OS solves the problem
 
-the intended result is that the NFT does not need to move every time the user's everyday wallet changes.
+Carry OS is designed around two separate responsibilities:
+
+1. **asset custody:** the vault holds the NFT and enforces the rules for deposits, beneficiary changes, and withdrawals.
+2. **beneficiary access:** a wallet authorised under the vault's rules remains associated with the NFT and can prove its entitlement to supported applications.
+
+A user connects the wallet that currently holds an eligible NFT and authorises its deposit into the corresponding Carry Vault on the NFT's native blockchain. The vault becomes the NFT's on-chain owner and records the original depositor and current beneficiary.
+
+The NFT does not need to remain in the user's everyday wallet for the user to retain access to supported benefits. The authorised beneficiary wallet can continue to use those benefits when the application providing them supports Carry's beneficiary verification method.
 
 ### the intended user journey
 
-1. **create a carry account** : enter carryos through its account and authentication flow.
-2. **connect a wallet** : connect the wallet that currently holds the NFT.
-3. **discover assets** : view eligible NFTs associated with that wallet and supported network.
-4. **select an NFT** : review the collection, token, network, and custody details before proceeding.
-5. **secure it in carry** : authorise a deposit into the corresponding chain-specific carry vault.
-6. **verify custody** : confirm the resulting transaction and vault record on the relevant blockchain.
-7. **change the beneficiary when needed** : the original depositor authorises a new beneficiary wallet. the previous beneficiary loses the rights assigned to the previous authorisation.
-8. **withdraw when required** : the currently authorised beneficiary can request withdrawal under the vault's rules.
+1. **create a Carry account:** sign in through Carry OS using NEAR Auth as the intended account authentication system.
+2. **connect a wallet:** connect the external blockchain wallet that holds the NFT.
+3. **discover NFTs:** view eligible assets associated with that wallet and supported network.
+4. **select an NFT:** review its collection, token identifier, network, and custody details.
+5. **secure the NFT:** approve a deposit into the corresponding Carry Vault.
+6. **verify custody:** confirm the transaction and resulting vault state on the relevant blockchain.
+7. **retain beneficiary access:** use the authorised beneficiary wallet to access benefits from applications that support beneficiary verification.
+8. **change the beneficiary when needed:** authorise a new beneficiary wallet according to the vault's permission rules.
+9. **withdraw when required:** release the NFT to the currently authorised beneficiary wallet.
 
-the original depositor and the beneficiary have distinct responsibilities. the depositor is the authority for beneficiary reassignment; the current beneficiary is the authority for withdrawal. the smart contract, not a frontend screen or database record, must enforce these permissions.
+### accessing benefits while an NFT is secured
 
-## what carry os is designed to protect
+Consider an NFT that provides membership access to a community. A user deposits it into Carry Vault. The vault becomes the NFT's direct on-chain owner, but the user's authorised beneficiary wallet remains recorded against that NFT.
 
-| capability | purpose |
-| --- | --- |
-| dedicated custody | keep selected NFTs separate from assets used in an everyday wallet |
-| beneficiary management | change the wallet authorised to benefit from a deposited NFT |
-| withdrawal control | restrict withdrawal to the currently authorised beneficiary |
-| custody verification | use on-chain state and transaction evidence as the source of truth |
-| multichain design | support assets on their native networks through chain-specific vault implementations |
-| utility-aware access | provide a way for integrated applications to recognise an authorised beneficiary |
+A compatible membership application can check the vault's current beneficiary information and recognise that wallet as entitled to the membership benefit. The NFT can remain secured in Carry Vault while the user accesses the supported benefit through the authorised wallet.
 
-## an important distinction: custody is not automatic utility portability
+This requires an integration or verification method that the application understands. An application that checks only the NFT's direct owner may see Carry Vault as the owner and fail to recognise the beneficiary. Carry OS cannot automatically change how unrelated applications check NFT ownership.
 
-when an NFT is deposited into a vault, the vault becomes its on-chain owner. a third-party application that checks only the NFT's direct owner may not automatically recognise the beneficiary recorded by carry os.
+Utility preservation is therefore a core product objective, but compatibility depends on beneficiary verification being supported by the application providing the benefit. The exact integration can vary by application, NFT standard, and blockchain.
 
-carry os therefore treats utility preservation as an integration problem, not a promise that every NFT benefit will continue working without changes. applications may need to verify a beneficiary through a supported proof, interface, or integration. the exact mechanism depends on the NFT standard, the application, and the chain.
+### selling or transferring a secured NFT
 
-the goal is to make custody and beneficiary entitlement verifiable while giving third-party products a practical way to recognise the authorised user.
+An NFT cannot be sold or freely transferred from Carry Vault as if it were held in an ordinary personal wallet.
+
+When the user wants to sell or transfer the NFT, they must first withdraw it to the currently authorised beneficiary wallet. They can then use their preferred external NFT marketplace or wallet transfer flow.
+
+This keeps the custody model clear: while the NFT is secured, it remains under the vault's rules. Withdrawal returns it to the authorised wallet so the user can manage it normally.
 
 ---
 
-## product model
+## why the system is technically feasible
 
-### carry account
+Carry OS is designed to use existing blockchain capabilities and standards rather than treating a database record as proof of asset ownership.
 
-the carry account is the user's entry point to the platform. the intended authentication experience uses NEAR authentication and passkey-friendly access. account identity and control of an external wallet are separate concepts: signing in to carry should not, by itself, be treated as proof that a user owns an NFT.
+The first implementation target is NEAR. Its NEP-171 NFT standard provides the NFT transfer and receiver interfaces needed for a vault to accept eligible NFTs and maintain on-chain custody records. The NEAR vault implementation in the development snapshot explores this model, including approved collections, depositor and beneficiary records, beneficiary reassignment, and withdrawal by the current beneficiary.
 
-### connected wallets
-
-users connect external wallets to discover assets and authorise blockchain actions. wallet connection, wallet ownership verification, and carry account authentication are separate steps and must be represented accurately in the implementation.
-
-### carry vault
-
-each supported network requires a vault or equivalent custody program deployed on that network. it holds the NFT and maintains the custody record, including the original depositor and current beneficiary.
-
-### beneficiary
-
-the beneficiary is the wallet currently authorised under the vault's rules. reassignment changes the authorised beneficiary without requiring the NFT to leave custody. the previous beneficiary must no longer be able to exercise rights that belong to the newly authorised beneficiary.
-
-### secure and withdraw
-
-- **secure:** keep the NFT in the carry vault under its current custody and beneficiary configuration.
-- **withdraw:** release the NFT from the vault to the currently authorised beneficiary, subject to the contract's rules.
-
-marketplace sales and other exit routes may be supported through future integrations. they must not bypass the same custody and authorisation rules.
-
----
-
-## architecture
-
-carry os is designed around a separation of responsibilities:
+The wider application separates account authentication, wallet ownership proof, backend coordination, persistent application data, chain-specific integrations, and smart contract-enforced custody. Each component has a defined responsibility.
 
 | component | responsibility |
-| --- | --- |
-| web application | account experience, connected wallets, NFT views, custody actions, beneficiary management |
-| authentication layer | establish the carry account session and protect account-level actions |
-| wallet integration | connect external wallets and request user-authorised signatures |
-| backend API | coordinate requests, validate sessions, prepare operations, index and present relevant data |
-| chain adapters | provide network-specific wallet, NFT, transaction, and contract interactions |
-| carry vault contracts | enforce deposits, beneficiary reassignment, and withdrawals on-chain |
-| database | store application metadata and operational records, without overriding on-chain custody state |
+|---|---|
+| NEAR Auth | intended sign-up and sign-in experience for a Carry account |
+| external wallet integration | connects wallets and requests user-approved signatures and transactions |
+| backend API | coordinates account operations, validates sessions and wallet proofs, and prepares and monitors product operations |
+| PostgreSQL and Prisma | persist Carry accounts, identity references, linked wallets, sessions, and operational records |
+| chain adapters | handle network-specific wallets, NFT discovery, transactions, and contract interactions |
+| Carry Vault contracts | enforce NFT custody, beneficiary permissions, and withdrawals on-chain |
+| beneficiary verification | lets compatible applications recognise the wallet authorised to use an NFT's supported benefits |
 
-**the blockchain is the custody source of truth.** the API and database may help coordinate and display information, but they must not be able to change who owns an NFT in the vault or bypass contract permissions.
+The backend and database coordinate the application. They do not become the authority over NFT custody. The relevant blockchain and vault contract must enforce asset ownership and permission changes.
 
-### network strategy
+A frontend screen or database record cannot prove that an NFT has been deposited. Carry OS must verify the relevant transaction and resulting contract state before presenting an asset as secured.
 
-carry os is being designed as a multichain system. the first complete implementation is being developed for NEAR. Ethereum, Solana, and Robinhood Chain require their own wallet integrations, NFT discovery, signature verification, vault programs, deployment configuration, and transaction monitoring.
+### the intended custody and permission model
 
-| network | wallet and asset model | custody implementation | development status |
-| --- | --- | --- | --- |
-| [NEAR](https://near.org/) | NEAR accounts and NEP-171 NFT interfaces | Rust-based NEAR vault contract using NEAR NFT transfer and storage rules | first implementation target. contract and backend experiments exist in public branches. integrated testnet deployment and full lifecycle verification remain outstanding |
-| [Ethereum](https://ethereum.org/) | EVM wallets and ERC-721 assets first, with ERC-1155 subject to scope | separate Solidity vault contract using EVM transaction and token-standard rules | planned. no complete Carry OS Ethereum custody integration is claimed |
-| [Solana](https://solana.com/) | Solana wallets and supported NFT assets, initially evaluating Metaplex Core and Token Metadata NFTs | separate Solana program with its own account and authority model, likely using Rust and Anchor | planned. supported standards and custody design must be finalised before implementation |
-| [Robinhood Chain](https://docs.robinhood.com/chain/) | EVM wallets and selected ERC-721 or ERC-1155 assets | separate EVM-compatible Solidity vault deployment with Robinhood Chain configuration | planned. EVM compatibility helps reuse tooling, but a separate deployment, configuration, testing, and verification are still required |
+The NEAR vault MVP explores the following authority model:
 
-#### how multichain support will work
+- the original depositor can authorise a beneficiary reassignment;
+- the current beneficiary can request withdrawal;
+- after reassignment, the previous beneficiary must no longer have the rights assigned to the new beneficiary;
+- the contract enforces these permissions instead of relying only on backend checks or frontend state.
 
-- **one Carry account:** users should have one Carry OS profile, with NEAR Auth as the intended account sign-in path.
-- **separate wallet links:** a user can connect wallets from different networks to the same Carry account. each wallet must prove control using that network's signature method.
-- **network-specific asset identity:** an NFT is identified by its network, collection or contract, and token identifier. token identifiers from different networks must never be treated as the same asset.
-- **chain adapters:** the application uses shared product actions, while a network adapter handles that chain's wallet, NFT standard, RPC, transaction format, vault interface, and finality rules.
-- **separate custody contracts:** each network needs its own vault implementation deployed on that network. a NEAR contract cannot custody an Ethereum or Solana NFT.
-- **independent verification:** deposits, beneficiary changes, and withdrawals must be checked against the relevant chain. a transaction hash alone is not proof of completion.
+This model must be tested against the deployed contract before it is treated as a completed security guarantee. The implementation also needs clear handling for pending transactions, failed transfers, and recovery.
 
-NEAR Auth is the planned Carry account login system. it does not create one universal wallet for every network and does not prove ownership of external Ethereum, Solana, or Robinhood Chain wallets.
-
-a network will only be described as supported after its wallet connection, ownership proof, NFT discovery, vault, beneficiary permissions, withdrawal, transaction monitoring, tests, and deployment evidence work together. listing a network in this table describes product direction, not current availability.
 ---
 
-## current implementation status
+## account authentication and connected wallets
 
-the repository has several branches because the project has been developed in parallel. the branches are public, but they are not automatically one integrated release.
+Carry OS separates the user's Carry account from the external wallets used to hold and authorise blockchain assets.
+
+### Carry account and NEAR Auth
+
+NEAR Auth is the intended authentication system for creating a Carry account and signing in. It provides the account-level entry point to the platform.
+
+Signing in identifies the user within Carry OS. It does not, by itself, prove that the user controls an external wallet or owns a particular NFT. The NEAR Auth identity flow and the verification of an external wallet are separate operations.
+
+The backend work includes an opt-in development and test authentication exchange with session persistence. It remains disabled by default while the exact NEAR Auth identity-token handoff is verified.
+
+### connected external wallets
+
+Users connect external wallets to discover NFTs and authorise blockchain actions. Each wallet must prove control using a verification method appropriate to its blockchain.
+
+A user should be able to disconnect the original wallet and connect another without making the custody of an already deposited NFT depend on the wallet currently connected to the interface. The Carry account should continue to display the secured asset based on its verified custody record and on-chain state.
+
+Changing the connected wallet and changing the NFT's beneficiary are different actions. Connecting another wallet does not automatically change the beneficiary or transfer custody rights.
+
+---
+
+## multichain strategy
+
+Carry OS is being designed as a multichain platform. NEAR is the first implementation target. Ethereum, Solana, and Robinhood Chain are planned as separate integrations.
+
+A single contract cannot custody assets across unrelated blockchains. Each network has its own wallet model, NFT standards, transaction format, and contract execution environment. Carry OS therefore uses a shared product experience with network-specific adapters and vault implementations.
+
+| network | wallet and asset model | intended custody implementation | status |
+|---|---|---|---|
+| NEAR | NEAR accounts and NEP-171 NFTs | Rust-based NEAR vault contract | first implementation target; vault code and tests exist in a development snapshot; integration, local validation, and testnet deployment remain outstanding |
+| Ethereum | EVM wallets and ERC-721 assets initially | separate Solidity vault contract | planned |
+| Solana | Solana wallets and supported NFT standards | separate Solana program with its own account and authority model | planned; supported standards and implementation approach need to be finalised |
+| Robinhood Chain | EVM-compatible wallets and selected NFT standards | separate EVM-compatible vault deployment | planned; requires its own deployment, configuration, testing, and verification |
+
+### how multichain support will work
+
+- **one Carry account:** users will have one Carry OS profile for managing their connected wallets and custody records.
+- **separate wallet links:** users can connect wallets from different networks to the same Carry account.
+- **network-specific ownership proof:** each wallet must prove control using that network's supported signature method.
+- **network-specific asset identity:** an NFT is identified by its network, collection or contract, and token identifier. Similar token IDs on different networks are not the same asset.
+- **chain adapters:** shared product actions use network-specific adapters for wallet operations, NFT standards, RPC access, transactions, vault interfaces, and finality rules.
+- **separate custody implementations:** every supported network requires its own vault contract or program.
+- **independent transaction verification:** deposits, beneficiary changes, and withdrawals must be checked against the relevant blockchain.
+
+NEAR Auth is the intended Carry account login system. It does not create one universal wallet for every network and does not prove ownership of external Ethereum, Solana, or Robinhood Chain wallets.
+
+A network will only be described as supported when its wallet connection, ownership proof, NFT discovery, vault, beneficiary permissions, withdrawal, transaction monitoring, tests, and deployment evidence work together. Listing a network here describes product direction, not current availability.
+
+---
+
+## current development progress
+
+Carry OS has been developed across a foundation branch, backend feature branches, and implementation snapshots. These branches contain different stages of the work and should not be treated as one integrated release.
+
+Substantial backend and database foundations have been developed. This includes PostgreSQL and Prisma schema work, initial migration work, identity and session persistence, wallet-linking experiments, and read-only NEAR testnet NFT discovery work. The next step is to integrate and verify these components with the frontend and deployed vault.
 
 | area | current status |
-| --- | --- |
-| repository foundation and workspace | available on `main` |
-| Next.js web application foundation | available in the repository |
-| NestJS API foundation | available in the repository |
-| shared types, configuration, and documentation | foundation available |
-| interactive Carry OS frontend prototype | available in the [OpenCode snapshot](https://github.com/SamueladebayoPython/carry-os/tree/archive/opencode-snapshot) |
-| frontend state, vault flow, beneficiary flow, and local persistence prototype | represented in the prototype branch; local UI state is not proof of an on-chain transaction |
-| backend authentication and session experiments | available in the [Codex backend branch](https://github.com/SamueladebayoPython/carry-os/tree/codex/backend-near-auth-session) |
-| wallet verification and linking experiments | present in experimental backend work; full frontend-to-backend integration is not verified |
-| NEAR vault contract implementation and tests | available in the [Codex snapshot](https://github.com/SamueladebayoPython/carry-os/tree/archive/codex-snapshot) |
-| deployed NEAR vault and complete live deposit-to-withdrawal journey | not verified as complete |
-| Ethereum, Solana, and Robinhood Chain integrations | planned |
-| production security review and audit | not completed |
+|---|---|
+| pnpm and Turborepo workspace | foundation available on the main branch |
+| Next.js web application | interactive frontend prototype available; wallet, authentication, and blockchain actions are not fully connected |
+| NestJS API | foundation and health endpoint available on the main branch |
+| shared types and validation | foundation available |
+| PostgreSQL and Prisma | schema and initial migration work available in the backend persistence branch; local migration validation and integration remain |
+| NEAR Auth and sessions | opt-in development/test JWT exchange and PostgreSQL-backed session work available in a feature branch; disabled by default pending verification of the identity-token handoff |
+| wallet linking | NEAR wallet challenge and NEP-413 signature-verification work available in a feature branch; full product integration remains |
+| NFT discovery | read-only NEAR testnet demo collection and vault view work available in an implementation snapshot |
+| NEAR Carry Vault | Rust NEP-171 custody contract MVP and tests available in a development snapshot; local validation, deployment, and end-to-end verification remain |
+| beneficiary reassignment and withdrawal | contract and frontend call experiments exist; complete integrated lifecycle is not yet verified |
+| utility beneficiary verification | design and integration work remain; third-party compatibility is not universal |
+| Ethereum, Solana, and Robinhood Chain | planned, not implemented |
+| production security review | not completed |
 
-**important:** a feature being present in a branch does not mean it is deployed, integrated with the frontend, or verified end-to-end. the prototype is useful for demonstrating the intended product experience; it must not be represented as proof of live custody unless the corresponding on-chain transaction and state can be independently verified.
+The main branch is the repository integration branch. Work in a feature branch or archived snapshot is not automatically part of the main application. A feature is not complete merely because code or a prototype exists. It must be integrated, tested, and verified in the environment being claimed.
 
 ### public development branches
 
-- [main : repository foundation](https://github.com/SamueladebayoPython/carry-os/tree/main)
-- [OpenCode snapshot : frontend prototype](https://github.com/SamueladebayoPython/carry-os/tree/archive/opencode-snapshot)
-- [Codex snapshot : broader implementation snapshot](https://github.com/SamueladebayoPython/carry-os/tree/archive/codex-snapshot)
-- [Codex backend persistence branch](https://github.com/SamueladebayoPython/carry-os/tree/codex/carry-os-backend-persistence)
+- [main: repository foundation and integration branch](https://github.com/SamueladebayoPython/carry-os/tree/main)
+- [OpenCode snapshot: frontend prototype](https://github.com/SamueladebayoPython/carry-os/tree/archive/opencode-snapshot)
+- [Codex snapshot: broader implementation and NEAR contract work](https://github.com/SamueladebayoPython/carry-os/tree/archive/codex-snapshot)
+- [backend persistence branch](https://github.com/SamueladebayoPython/carry-os/tree/codex/carry-os-backend-persistence)
 - [NEAR authentication and session branch](https://github.com/SamueladebayoPython/carry-os/tree/codex/backend-near-auth-session)
-- [Backend architecture](https://github.com/SamueladebayoPython/carry-os/tree/feat/backend-architecture)
-- [Prisma schema proposal](https://github.com/SamueladebayoPython/carry-os/tree/feat/prisma-schema-proposal)
+- [backend architecture branch](https://github.com/SamueladebayoPython/carry-os/tree/feat/backend-architecture)
+- [Prisma schema proposal branch](https://github.com/SamueladebayoPython/carry-os/tree/feat/prisma-schema-proposal)
 
 ---
 
 ## repository structure
 
-the foundation is organised as a pnpm and turborepo monorepo:
+The main branch contains the monorepo foundation. Some contract and prototype files are available only in the development snapshots linked above.
 
-```text
+~~~text
 carry-os/
 ├── apps/
 │   ├── api/                  # NestJS backend API
@@ -180,106 +208,119 @@ carry-os/
 ├── packages/
 │   ├── config/               # shared tooling configuration
 │   └── shared/               # shared types and validation
-├── contracts/                # NEAR contract workspace in implementation snapshots
 ├── docs/                     # architecture, roadmap, security, and API notes
 ├── .github/workflows/        # CI workflows
 ├── package.json
 ├── pnpm-workspace.yaml
 └── turbo.json
-```
+~~~
 
-the exact files available depend on the branch being viewed. use the branch links above when reviewing work that is not yet part of `main`.
+The NEAR contract workspace, demo NFT contract, and additional prototype files are present in the implementation snapshots. Their presence in a snapshot does not mean they have been merged into the main branch or deployed.
 
-## running the repository
+## running the repository foundation
 
-the root workspace pins its toolchain in the repository configuration. check the selected branch's `package.json`, `.nvmrc`, and lockfile before installing dependencies, because experimental branches may have different requirements.
+The root workspace pins Node.js 24 and pnpm 12.18.0.
 
-for the foundation branch, the documented setup is:
-
-```bash
+~~~bash
 corepack enable
 corepack prepare pnpm@12.18.0 --activate
 pnpm install
 pnpm dev
-```
+~~~
 
-the foundation's expected local services are:
+The foundation's local application addresses are:
 
 | service | local address |
-| --- | --- |
+|---|---|
 | web application | http://localhost:3000 |
 | API health endpoint | http://localhost:3001/api/health |
 | API documentation | http://localhost:3001/api/docs |
 
-to run an individual application:
+To run an individual application:
 
-```bash
+~~~bash
 pnpm --filter @carry-os/web dev
 pnpm --filter @carry-os/api dev
-```
+~~~
 
-these commands describe the repository foundation. they do not imply that the prototype branch, backend experiments, or contracts are already connected into one running system. follow the scripts and instructions in the branch you choose to run.
+The backend persistence branch also includes a local PostgreSQL 17 Docker Compose configuration and Prisma setup. Follow that branch's README and environment instructions before running its database migrations. Do not assume those files or database features are already present on the main branch.
+
+These commands run the repository foundation. They do not imply that the frontend prototype, backend experiments, and NEAR contracts are already connected into one working custody system.
+
+---
+
+## roadmap
+
+### phase 1: product foundation and integration
+
+- maintain the Carry OS account and dashboard experience;
+- complete the NEAR Auth identity-token handoff and account session integration;
+- connect and verify the first supported external wallet;
+- complete the PostgreSQL and Prisma persistence integration;
+- connect the frontend to the backend through agreed API contracts.
+
+### phase 2: NEAR testnet custody lifecycle
+
+- complete NEAR wallet ownership verification;
+- complete NFT discovery and deposit eligibility checks;
+- validate and deploy the NEAR Carry Vault on testnet;
+- complete NFT deposit and on-chain custody verification;
+- complete beneficiary reassignment and old-beneficiary revocation;
+- complete withdrawal to the current beneficiary;
+- display transaction links and verified on-chain custody state.
+
+### phase 3: utility-aware beneficiary access
+
+- define a verifiable beneficiary proof or integration interface;
+- build a reference integration with an application that provides NFT-based access;
+- verify that the current beneficiary receives access while the NFT remains in custody;
+- verify that the previous beneficiary loses access after reassignment;
+- document which utility models and integrations are supported.
+
+### phase 4: security and production readiness
+
+- complete independent contract and application security reviews;
+- establish monitoring, recovery procedures, and operational controls;
+- improve transaction reconciliation and error handling;
+- define production deployment, incident response, and user support procedures.
+
+### phase 5: additional networks
+
+- implement Ethereum custody;
+- implement Solana custody;
+- implement Robinhood Chain custody;
+- test each network's complete custody lifecycle;
+- maintain separate deployment and security reviews for each network.
+
+See [the detailed roadmap](docs/ROADMAP.md) for the work, rationale, and completion evidence for each phase.
 
 ---
 
 ## security principles
 
-custody software must be designed around explicit permissions and verifiable state. carry os is intended to follow these principles:
+Carry OS is being designed around explicit permissions and verifiable blockchain state.
 
-1. **on-chain enforcement:** deposit, reassignment, and withdrawal permissions must be enforced by the vault contract.
+1. **on-chain enforcement:** custody, beneficiary reassignment, and withdrawal permissions must be enforced by the relevant vault contract.
 2. **least authority:** the backend must not have unilateral power to redirect or withdraw user assets.
-3. **separate identity from ownership:** a carry account session is not a substitute for wallet ownership verification.
+3. **separate authentication from ownership:** a Carry account session is not a substitute for external wallet ownership verification.
 4. **explicit authorisation:** users must understand and approve the wallet and contract actions they sign.
-5. **beneficiary revocation:** after reassignment, the previous beneficiary must not retain the rights that were transferred to the new beneficiary.
-6. **verifiable custody:** the application should show the relevant network, contract, token identifier, transaction, and current vault state.
-7. **safe failure handling:** failed or incomplete transactions must not be presented as successful custody operations.
-8. **no secret leakage:** private keys, seed phrases, API secrets, and production credentials must never be committed to the repository.
+5. **beneficiary revocation:** after reassignment, the previous beneficiary must no longer retain the rights transferred to the new beneficiary.
+6. **verifiable custody:** the application must show the relevant network, contract, token identifier, transaction, and current vault state.
+7. **safe transaction handling:** failed or incomplete transactions must not be presented as successful custody operations.
+8. **secure application data:** private keys, seed phrases, API secrets, and production credentials must never be committed to the repository.
 
-carry os remains in development and has not completed a production security audit. do not deposit valuable assets into experimental or unaudited contracts.
+Carry OS remains in development and has not completed a production security audit. Experimental or unaudited contracts must not be used to secure valuable assets.
 
-## roadmap
-
-### phase 1 : product prototype
-- establish the Carry OS account and dashboard experience
-- connect a wallet and display eligible NFTs
-- demonstrate the secure, vault, beneficiary, and withdrawal journeys
-- make the user experience understandable before adding more networks
-
-### phase 2 : NEAR testnet lifecycle
-- complete NEAR authentication and session integration
-- connect a supported NEAR wallet
-- verify wallet ownership before sensitive actions
-- deploy and configure the vault contract on testnet
-- complete and verify NFT deposit, beneficiary reassignment, and withdrawal
-- display transaction links and on-chain custody state in the application
-
-### phase 3 : utility-aware beneficiary access
-- define a verifiable beneficiary proof or integration interface
-- work with NFT applications and membership providers to recognise beneficiaries
-- document which utility models are supported and which require application-level integration
-
-### phase 4 : production readiness
-- independent contract and application security reviews
-- monitoring, recovery procedures, and operational controls
-- reliable indexing, transaction reconciliation, and error handling
-- clear user disclosures and support procedures
-
-### phase 5 : additional networks
-- evaluate and implement Ethereum custody
-- evaluate and implement Solana custody
-- evaluate and implement Robinhood Chain custody
-- maintain separate, audited integrations for each network
-
----
+See [the security document](docs/SECURITY.md) for the threat model and required verification controls.
 
 ## project goals
 
-carry os aims to make digital ownership more resilient by protecting the asset separately from the wallet a person uses every day.
+Carry OS aims to make digital ownership more resilient by protecting utility NFTs separately from the wallets people use for everyday blockchain activity.
 
-the long-term goal is not simply to store NFTs. it is to build a custody layer where users can change their authorised wallet without losing control of the NFT, while applications have a clear way to verify who is entitled to use it.
+The goal is not simply to store NFTs. It is to build a custody system where users can change their authorised wallet without moving the NFT out of the vault, while compatible applications have a reliable way to verify who is entitled to use its benefits.
 
-**secure the asset. move the authority. preserve the utility.**
+**secure the asset. preserve the utility. control the access.**
 
 ## license
 
-a license has not yet been selected for this repository. until one is added, do not assume that the code is available for unrestricted reuse.
+A license has not yet been selected for this repository. Until one is added, do not assume that the code is available for unrestricted reuse.
