@@ -302,18 +302,157 @@ The database should make it possible to reconstruct what the user requested, wha
 
 ## 12. Chain adapters and multichain support
 
-Each chain adapter translates common Carry OS operations into that chain's wallet, NFT, transaction, and contract interfaces.
+### Why Carry OS needs chain adapters
 
-A shared interface may expose concepts such as discover assets, prepare deposit, read custody record, reassign beneficiary, and withdraw. The actual implementation remains chain-specific because NFT standards, signatures, wallets, transaction finality, and contract execution differ.
+Carry OS should present one understandable product experience, but it cannot pretend that every blockchain handles NFTs in the same way. NEAR, Ethereum, Solana, and Robinhood Chain use different account models, wallet signatures, NFT standards, transaction execution, contract storage, and confirmation rules.
 
-| Network | Intended role | Status |
-| --- | --- | --- |
-| NEAR | First complete authentication/custody experience | Primary target; deployment and end-to-end verification remain |
-| Ethereum | EVM NFT custody and wallet support | Planned |
-| Solana | Solana-native NFT custody and wallet support | Planned |
-| Robinhood Chain | Future chain-specific custody support | Planned; technical details must be confirmed |
+A **chain adapter** is the network-specific part of Carry OS that translates common product actions into the correct blockchain operations. The frontend can ask to discover an NFT, prepare a deposit, read a custody record, reassign a beneficiary, or withdraw. The selected adapter performs that action using the correct wallet, RPC, NFT interface, and vault for the active network.
 
-No network inherits another network's implementation status.
+The adapter must not weaken or replace the contract's permission checks. It prepares and verifies actions; the vault remains responsible for enforcing custody authority.
+
+### Shared Carry account, separate network wallets
+
+The intended model is one Carry OS account with multiple connected wallets.
+
+- NEAR Auth is the planned sign-in and account onboarding path.
+- A user may connect a NEAR wallet, an Ethereum wallet, a Solana wallet, or an EVM wallet configured for Robinhood Chain.
+- Each connected wallet is stored with its network identity and address.
+- Each wallet must prove control using a challenge and signature method appropriate to its network.
+- Signing in with NEAR Auth does not prove ownership of any external wallet.
+- A wallet connection does not automatically make that wallet the beneficiary of an NFT already in custody.
+
+The Carry account identifies the person using the application. The connected wallet proves control of a particular blockchain address. The vault decides which address has custody-related authority.
+
+### Shared application interface
+
+The common application layer should expose consistent operations:
+
+| Common operation | What the chain adapter must do |
+| --- | --- |
+| Connect wallet | Open a compatible wallet and identify the active network and address |
+| Prove wallet ownership | Create or verify a chain-specific signed challenge |
+| Discover NFTs | Query supported NFT standards and return normalized asset records |
+| Check eligibility | Verify current ownership, supported standard, collection policy, and vault compatibility |
+| Prepare deposit | Build the correct network-specific approval and transfer instructions |
+| Read custody | Query the relevant vault and return the current on-chain custody record |
+| Reassign beneficiary | Prepare the authorised contract or program instruction |
+| Withdraw | Prepare the release operation for the currently authorised beneficiary |
+| Track transaction | Read network-specific transaction status and verify resulting chain state |
+
+The shared interface normalizes product behavior, not blockchain semantics. Each adapter must preserve chain-specific data and error details rather than hiding important differences.
+
+### Network registry and asset identity
+
+Carry OS needs a network registry that defines the networks and environments available to the application.
+
+Each entry should include:
+
+- stable internal network identifier;
+- chain ID or network identifier used by the blockchain;
+- environment, such as local, testnet, devnet, or mainnet;
+- native gas token;
+- wallet connection configuration;
+- RPC and indexer configuration;
+- explorer base URL;
+- supported NFT standards;
+- vault contract or program address;
+- confirmation and finality policy;
+- feature status and release state.
+
+Every NFT must have a network-scoped identity. The normalized asset reference should contain at least the network, collection or contract address, and token identifier. For standards that represent balances or multiple units, it must also include the amount or token-account context required by that standard.
+
+This prevents an asset from being confused with another NFT that happens to use the same token ID on a different chain. Every transaction request must bind the account, wallet, asset, network, vault, and intended action together.
+
+### Network implementation matrix
+
+| Network | Wallet and asset model | Vault implementation | Current development status |
+| --- | --- | --- | --- |
+| NEAR | NEAR accounts and NEP-171 NFTs, with NEAR-specific ownership proofs and transaction signing | Rust-based NEAR smart contract | First implementation target. Contract, authentication, and backend experiments exist in public branches. Integrated testnet lifecycle remains to be verified |
+| Ethereum | EVM wallets; ERC-721 first, with ERC-1155 added only if the custody model supports quantities and batch transfers | Solidity EVM contract | Planned. No complete Carry OS Ethereum integration is claimed |
+| Solana | Solana wallets; Metaplex Core and selected Token Metadata NFTs require explicit support decisions | Solana program using its native account and authority model, likely Rust and Anchor | Planned. Asset scope and custody design remain to be finalised |
+| Robinhood Chain | EVM wallets and selected ERC-721 or ERC-1155 assets | Separate Solidity deployment on Robinhood Chain | Planned. EVM compatibility allows tooling reuse, but network deployment and verification remain separate |
+
+### NEAR adapter: first reference implementation
+
+The NEAR adapter is the first complete target because NEAR is the selected initial network.
+
+It must:
+
+1. connect a supported NEAR wallet for users who hold NFTs outside the Carry account's NEAR authentication flow;
+2. verify wallet control independently from NEAR Auth login;
+3. discover NEP-171 NFTs and retrieve collection, token ID, owner, and metadata;
+4. check the receiving contract's storage requirements and NFT transfer compatibility;
+5. prepare the required NFT transfer or transfer-call interaction;
+6. call the Carry vault and create a custody record;
+7. read the custody record after transaction confirmation;
+8. prepare beneficiary reassignment and withdrawal instructions;
+9. monitor transaction execution and confirm the resulting owner and custody state.
+
+Relevant standards include [NEP-171](https://github.com/near/NEPs/blob/master/neps/nep-0171.md) for NFTs, [NEP-145](https://github.com/near/NEPs/blob/master/neps/nep-0145.md) for storage management, and [NEP-177](https://github.com/near/NEPs/blob/master/neps/nep-0177.md) for NFT metadata.
+
+### Ethereum adapter
+
+Ethereum uses the EVM account and smart-contract model. The first implementation should target ERC-721 because it represents individually owned NFTs with a well-defined transfer interface. ERC-1155 can be added after the vault supports token quantities, batch operations, and the additional authorization rules it requires.
+
+The adapter must:
+
+- connect EVM wallets and verify the active chain ID;
+- verify wallet ownership with a domain-bound, nonce-protected message such as a Sign-In with Ethereum challenge;
+- discover ERC-721 assets and later ERC-1155 assets through an indexer, while checking current ownership on-chain before deposit;
+- prepare the correct approval and safe-transfer operation;
+- call a Solidity vault that records the collection contract, token ID, depositor, beneficiary, and custody status;
+- enforce reassignment and withdrawal permissions in the contract;
+- wait for the selected confirmation policy and handle chain reorganisations;
+- verify the vault's token balance and custody record before showing success.
+
+Relevant references: [ERC-721](https://eips.ethereum.org/EIPS/eip-721), [ERC-1155](https://eips.ethereum.org/EIPS/eip-1155), [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193), and [EIP-4361](https://eips.ethereum.org/EIPS/eip-4361).
+
+### Solana adapter
+
+Solana uses public keys, accounts, instructions, and program-derived addresses. It does not use EVM contracts or ERC token interfaces. Carry OS therefore needs a Solana program and a separate custody account model.
+
+The initial asset scope should explicitly evaluate:
+
+- Metaplex Core assets;
+- existing NFTs created with the Metaplex Token Metadata program;
+- compressed NFTs as a separate future decision, not an assumed part of the first release.
+
+The adapter must connect a compatible Solana wallet, verify a signed challenge against the wallet public key, discover assets through a suitable Solana data provider, and verify ownership and asset details from chain state before preparing a deposit.
+
+The vault program must define how each supported asset standard is transferred into program-controlled custody, how the custody record stores the depositor and beneficiary, and how reassignment and withdrawal instructions enforce authority. Program-derived addresses, account ownership, token accounts, rent, compute limits, transaction size, and confirmation behavior must be handled explicitly.
+
+Relevant references: [Metaplex Core](https://www.metaplex.com/docs/smart-contracts/core), [Metaplex Token Metadata](https://www.metaplex.com/docs/smart-contracts/token-metadata), and [Solana token metadata documentation](https://solana.com/docs/tokens/metaplex).
+
+### Robinhood Chain adapter
+
+Robinhood Chain is an Ethereum-compatible Layer 2 built on Arbitrum. Its EVM compatibility means Solidity contracts and standard Ethereum development tools can be used. It does not mean an Ethereum deployment automatically works on Robinhood Chain.
+
+The adapter must use a separate network configuration, wallet chain selection, RPC endpoint, explorer, vault deployment, and monitoring setup. Chain IDs and endpoints must be checked against official documentation again during deployment.
+
+Carry OS can evaluate reusing the reviewed EVM adapter and Solidity vault after verifying compatibility with the chain's RPC, transaction, fee, and finality behavior. The contract must still be deployed and tested independently on Robinhood Chain.
+
+References: [Robinhood Chain developer documentation](https://docs.robinhood.com/chain/), [network connection details](https://docs.robinhood.com/chain/connecting/), and [smart contract deployment](https://docs.robinhood.com/chain/deploy-smart-contracts/).
+
+### Provider, indexing, and transaction reliability
+
+Each adapter depends on RPC endpoints, wallet providers, and often an indexer. These services help the application read chain data, but they are not the authority for custody.
+
+- Use indexers to discover and paginate NFT collections.
+- Verify current ownership and important custody results against authoritative chain reads.
+- Track provider freshness and surface stale or unavailable data.
+- Apply timeouts, bounded retries, rate limits, and provider health checks.
+- Do not silently switch a user's active network during a transaction.
+- Record transaction identifiers with their network so identical-looking hashes or token IDs cannot be mixed across networks.
+- Use each chain's appropriate confirmation or finality policy.
+- Reconcile pending operations after API restarts or provider outages.
+- Never display a deposit, reassignment, or withdrawal as complete until the resulting chain state has been checked.
+
+### What makes a network supported
+
+A network is not supported just because its wallet connects or its NFTs appear in the dashboard. It becomes a supported Carry OS network only after wallet ownership proof, discovery, eligibility checks, vault custody, beneficiary reassignment, withdrawal, transaction monitoring, security tests, and reproducible deployment evidence are complete.
+
+NEAR is the first target. Ethereum, Solana, and Robinhood Chain remain planned integrations. No network inherits another network's implementation or audit status.
+
 
 ## 13. Security boundaries
 
