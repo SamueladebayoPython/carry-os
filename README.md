@@ -35,7 +35,7 @@ the intended result is that the NFT does not need to move every time the user's 
 
 ### the intended user journey
 
-1. **create a carry account** — enter carry os through its account and authentication flow.
+1. **create a carry account** — enter carryos through its account and authentication flow.
 2. **connect a wallet** — connect the wallet that currently holds the NFT.
 3. **discover assets** — view eligible NFTs associated with that wallet and supported network.
 4. **select an NFT** — review the collection, token, network, and custody details before proceeding.
