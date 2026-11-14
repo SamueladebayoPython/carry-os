@@ -1,388 +1,560 @@
 # carry os roadmap
 
-> **Purpose:** this roadmap describes the work required to turn carry os from a
-> prototype into a secure, usable custody product. It includes planned work
-> beyond the current implementation. A roadmap item is not a claim that the
-> feature already exists.
+> **Purpose:** this roadmap explains what must be built, what each part does, why the system needs it, and how we will know it works. It covers the complete product, including features that have not yet been implemented.
+>
+> **Delivery strategy:** build one complete, verifiable NEAR testnet experience first. Add Ethereum, Solana, and Robinhood Chain as separate integrations after the first lifecycle is secure and reliable.
 
-The delivery order is **NEAR first**, then additional networks. The project is
-testnet-first. Mainnet support is a separate release decision that requires
-security review and operational readiness.
+A roadmap item is not evidence of implementation. Status must be checked against integrated code, automated tests, deployment records, and real transaction evidence.
 
-## How to read this roadmap
+## Status language
 
-### Status definitions
+- **Implemented:** integrated into the main product, tested, documented, and verified for the stated environment.
+- **Prototype / branch work:** code or a demonstration exists in a branch but is not yet integrated and verified as part of one complete product.
+- **In progress:** integration or testing is actively underway.
+- **Planned:** work still required.
+- **Decision needed:** a product or technical choice must be approved before implementation can be considered final.
 
-- **Implemented:** present in the integration branch, tested, documented, and
-  verified for the stated environment.
-- **Prototype / branch work:** code or a demonstration exists in a separate
-  branch, but it is not yet integrated and verified as part of one working
-  product.
-- **In progress:** actively being integrated or tested.
-- **Planned:** required work that has not been completed.
-- **Decision needed:** an architectural or product choice that must be agreed
-  before implementation.
-
-A feature is not complete merely because a screen, API method, contract, or
-test exists in isolation. The full user journey and its failure cases must work.
-
-## Product outcome
-
-A user should be able to:
-
-1. Create and access a Carry account.
-2. Connect an external wallet that holds an eligible NFT.
-3. Prove control of that wallet.
-4. Discover and inspect eligible NFTs on a supported network.
-5. Authorise a deposit into the corresponding Carry vault.
-6. Verify from blockchain state that the vault holds the NFT.
-7. Disconnect the original wallet without losing the custody record.
-8. Connect a replacement wallet and prove control of it.
-9. Reassign the NFT's beneficiary under the vault's authorisation rules.
-10. Confirm that the previous beneficiary can no longer exercise the reassigned
-    rights.
-11. Withdraw the NFT only to the currently authorised beneficiary.
-12. View the transaction history and evidence for each custody action.
-
-The long-term utility goal adds another requirement: an integrated application
-must be able to verify the authorised beneficiary even though the NFT itself is
-held by the Carry vault. This requires an explicit proof or integration
-standard. It cannot be assumed to work automatically with every NFT utility.
+A page that looks finished is not proof that the backend works. An API method is not proof that the contract enforces the permission. A contract test is not proof that the frontend can complete the user journey. Completion requires these parts to work together.
 
 ---
 
-## Phase 0 — Repository and development foundation
+## The complete product we are building
 
-**Status: foundation exists on `main`; review and integration hygiene remain.**
+The finished NEAR version of Carry OS should let a person:
 
-- Maintain the pnpm/Turborepo monorepo.
-- Maintain the Next.js web application and NestJS API.
-- Maintain shared types, validation contracts, and API documentation.
-- Keep CI checks for installation, linting, type-checking, builds, and tests.
-- Establish a clear integration branch and feature-branch workflow.
-- Keep the README, roadmap, architecture, security, and network documents
-  consistent with the actual code.
-- Add a repository licence after the owner chooses the intended reuse terms.
-- Add contribution instructions, environment examples, and reproducible setup
-  instructions.
+1. Create a Carry account and sign in.
+2. Connect the wallet that currently holds an NFT.
+3. Prove that they control that wallet.
+4. See the NFTs they can actually deposit.
+5. Select an NFT and understand exactly what will happen.
+6. Approve a transaction that transfers the NFT into a Carry vault.
+7. Verify that the vault, not just the user interface, now holds the NFT.
+8. Disconnect the original wallet and connect a replacement wallet.
+9. Prove control of the replacement wallet.
+10. Change the NFT's beneficiary without moving the NFT out of the vault.
+11. Confirm that the old beneficiary no longer has the reassigned rights.
+12. Withdraw the NFT to the currently authorised beneficiary when they choose to leave Carry custody.
+13. Inspect the history and blockchain evidence for every important action.
 
-**Exit criteria**
+The larger utility-preservation goal is to let a third-party application verify the current beneficiary of a vaulted NFT. This requires an integration or proof mechanism. Simply holding an NFT in a vault cannot force unrelated applications to recognise its beneficiary.
 
-- A clean clone can install and run using documented commands.
+---
+
+## Phase 0 — Repository foundation and one source of truth
+
+**Status: foundation exists on main; integration and documentation review remain.**
+
+### What we are building
+
+A repository that developers can clone, understand, run, test, and extend without guessing which branch or document describes the real product.
+
+### Work
+
+- Keep the Next.js frontend, NestJS API, shared TypeScript contracts, and workspace tooling organised in the monorepo.
+- Define which branch is the integration source and require feature work to be reviewed before it becomes part of the product.
+- Keep environment variables documented with safe example values.
+- Make installation, local development, tests, and builds reproducible from a clean clone.
+- Run CI on every proposed integration so broken types, builds, or tests are caught before merging.
+- Add dependency and secret scanning so vulnerable packages and accidentally committed credentials are detected early.
+- Add a licence only after the project owner chooses the reuse terms.
+- Keep README, architecture, API, security, network support, and roadmap descriptions aligned with actual code.
+
+### Why it matters
+
+Carry OS combines a web application, backend, database, wallets, and smart contracts. If the repository is not reproducible, developers cannot reliably integrate those pieces or verify a reported bug.
+
+### Completion evidence
+
+- A new developer can clone the integration branch and follow the documented setup without relying on private machine state.
 - CI passes on the integration branch.
-- The repository clearly distinguishes integrated code from experimental
-  branches.
+- Each major feature has a clear implementation location and tests.
+- Documentation identifies what is integrated, experimental, and planned.
 
-## Phase 1 — Product experience and frontend integration
+## Phase 1 — Carry account and secure sign-in
 
-**Status: prototype / branch work exists; final integration and verification
-remain.**
+**Status: authentication/session experiments exist in public branches; the final integrated sign-in flow is not yet verified.**
 
-- Build the Carry account entry experience: sign in, sign up, and account
-  dashboard.
-- Show an empty dashboard before a wallet is connected.
-- Support connect, disconnect, and switch-wallet actions as separate user
-  actions.
-- Display connected wallet address and selected network clearly.
-- Show the user's eligible NFTs with collection, token ID, image, network, and
-  ownership details.
-- Provide an NFT detail view before the user authorises custody.
-- Build clear deposit, secure, beneficiary, and withdrawal states.
-- Show pending, confirmed, failed, and rejected transaction states.
-- Display transaction hashes and links to the relevant block explorer.
-- Make empty, loading, unsupported-network, and error states understandable.
-- Make the interface responsive and accessible.
-- Remove misleading demo behavior from any production-facing flow.
+### What we are building
 
-**Exit criteria**
+A Carry account is the user's identity inside Carry OS. It gives the user a stable place to return to, view linked wallets, and manage their custody records even when the wallet they use every day changes.
 
-- A user can complete the intended journey in the interface without ambiguous
-  actions or false success states.
-- UI state is derived from verified API and blockchain results for real
-  operations, not only local storage or mock data.
-- The demo/prototype mode is clearly separated from real custody mode.
+The selected NEAR authentication approach is intended to provide the sign-in experience, with passkey-friendly access where supported. The exact provider and protocol must be confirmed before it is treated as final.
 
-## Phase 2 — Carry identity, authentication, and sessions
+### What the NEAR authentication proof does
 
-**Status: backend authentication/session experiments exist in separate
-branches; integrated NEAR authentication is not yet verified end to end.**
+A NEAR authentication signature or provider-issued proof establishes that the user controls or has authenticated through the NEAR identity accepted by the chosen protocol. The backend verifies that proof and creates a Carry session.
 
-- Finalise the Carry account identity model.
-- Implement the selected NEAR authentication flow.
-- Verify authentication on the backend; do not trust frontend claims.
-- Define secure session issuance, expiry, refresh/rotation, and revocation.
-- Protect account and custody-related API routes.
-- Define account recovery and re-authentication behavior.
-- Add CSRF, cookie, CORS, rate-limit, and session-fixation protections as
-  appropriate to the selected session design.
-- Require step-up authentication for sensitive account actions where needed.
+The session tells the API which Carry account is making a request. It does not prove control of every external wallet and does not authorise an NFT withdrawal by itself.
 
-**Decision needed**
+### Work
 
-- Confirm the exact NEAR authentication provider and signed-message format.
-- Confirm whether sessions are server-side or token-based and where revocation
-  state is stored.
-- Define what happens if a user loses access to their Carry authentication
-  method.
+- Implement the sign-in and account creation flow.
+- Verify the authentication result on the backend, including its issuer, intended audience, account identity, expiry, and replay protections required by the selected protocol.
+- Map the verified identity to one Carry account so repeated sign-ins return to the same account.
+- Create a protected session with a defined expiry, renewal, and revocation policy.
+- Require a valid session for account-specific API operations.
+- Implement sign-out and invalidate the session.
+- Protect browser sessions against CSRF, session fixation, unsafe cookie settings, and overly broad CORS.
+- Define recovery if a user loses access to the NEAR authentication method.
+- Require fresh authentication or an additional proof for high-risk account changes when appropriate.
 
-**Exit criteria**
+### Why it matters
 
-- Valid users can authenticate and maintain a protected session.
-- Invalid, expired, revoked, and replayed authentication attempts are rejected.
-- Automated tests cover authentication and session failure cases.
+Without a secure Carry identity, the system cannot reliably know which account is requesting wallet linking or viewing custody records. Authentication must also remain separate from blockchain ownership: signing in must not give the account automatic control over an NFT.
 
-## Phase 3 — External wallet connection and ownership verification
+### Completion evidence
 
-**Status: wallet verification and linking experiments exist in separate
-branches; complete frontend-to-backend integration remains.**
+- A valid user can create or access their Carry account.
+- The backend, not the browser, verifies the authentication proof.
+- Expired, forged, wrong-audience, and replayed proofs are rejected.
+- Sessions expire and can be revoked.
+- Tests cover sign-in, sign-out, expiry, renewal, and account recovery behavior.
 
-- Integrate the supported NEAR wallet connection flow.
-- Define how external wallets are connected to a Carry account.
-- Generate server-side, single-use ownership challenges.
-- Bind signed challenges to the application domain, wallet address, network,
-  purpose, and expiry.
-- Verify signatures on the backend using chain-appropriate methods.
-- Prevent replay, address substitution, and cross-network proof reuse.
-- Support disconnecting and replacing a wallet.
-- Keep Carry account authentication separate from proof of control of an NFT
-  wallet.
+## Phase 2 — Connect wallets and prove ownership
 
-**Exit criteria**
+**Status: wallet verification and linking experiments exist in public branches; full application integration remains.**
 
-- The backend can verify that the user controls the wallet they are linking.
-- Expired, reused, malformed, or wrong-network proofs are rejected.
-- Wallet replacement does not silently transfer custody or bypass beneficiary
-  rules.
+### What we are building
 
-## Phase 4 — NFT discovery and asset eligibility
+Users must be able to connect the wallet that currently holds their NFTs. Carry OS must prove that the user controls the wallet before it links that address to their Carry account or allows it to authorise sensitive actions.
 
-**Status: limited discovery experiments exist; production-ready discovery is
-planned.**
+A wallet address is public information. Anyone can type another person's address into a form. Connection alone is therefore not ownership proof.
 
-- Select NEAR RPC and indexer sources.
-- Discover NFTs owned by the connected wallet.
-- Define supported NFT standards and collection eligibility rules.
-- Normalise collection names, token IDs, metadata, media, and ownership data.
-- Handle pagination and large collections.
-- Filter spam, malicious metadata, and unsupported assets.
-- Handle missing images, malformed metadata, rate limits, provider outages, and
-  stale indexer data.
-- Reconcile indexer results with authoritative chain reads before custody
-  actions.
-- Cache metadata without treating cached ownership as authoritative.
+### What the wallet signature does
 
-**Exit criteria**
+The backend creates a unique challenge. The wallet signs that challenge with its private key. The backend verifies the signature against the wallet address and chain.
 
-- The NFT list is tied to the connected wallet and selected network.
-- The user can inspect why an asset is eligible or unsupported.
-- Deposit preparation checks current ownership and contract compatibility.
+The challenge must identify the Carry OS domain, wallet address, network, purpose, unique nonce, and expiry. This stops a proof created for one wallet, network, or action from being reused for another.
 
-## Phase 5 — NEAR vault contract and custody lifecycle
+A NEAR signature proves control of the relevant NEAR account. An EVM wallet requires an EVM-compatible signature verification method. Solana requires its own wallet-signature verification. One chain's signature must never be accepted as proof of another chain's private key.
 
-**Status: NEAR contract code and tests exist in a public snapshot; integration,
-deployment, and a complete verified testnet lifecycle remain outstanding.**
+### Work
 
-- Review and finalise the NEAR vault contract architecture.
-- Confirm supported NFT standard and collection approval policy.
-- Define the vault record for each deposited NFT.
-- Record the original depositor and current beneficiary.
-- Implement safe deposit and custody recording.
-- Prevent unauthorised transfer or withdrawal while an NFT is secured.
-- Implement beneficiary reassignment under the approved authority model.
-- Ensure the previous beneficiary loses rights after reassignment.
-- Allow withdrawal only by the currently authorised beneficiary and only to
-  the approved destination.
-- Define duplicate-deposit prevention and operation idempotency.
-- Define pause, recovery, upgrade, and emergency behavior before deployment.
-- Add unit, integration, adversarial, and invariant tests.
-- Deploy to NEAR testnet and publish verified contract addresses and explorer
-  links.
+- Connect the supported NEAR wallet through the selected wallet interface.
+- Let the user connect, disconnect, and switch wallets explicitly.
+- Create a server-generated, single-use ownership challenge.
+- Ask the wallet to sign the exact challenge.
+- Verify the signature on the backend using the correct chain-specific method.
+- Consume the nonce after verification and reject reused or expired challenges.
+- Bind the proof to the account, wallet, chain, and requested purpose.
+- Store the verified wallet link and its status.
+- Define what happens when a wallet is disconnected, compromised, or replaced.
+- Require a new proof when the user connects a replacement wallet.
 
-**Exit criteria**
+### Why it matters
 
-- A testnet NFT can be deposited into the vault.
-- On-chain state proves the vault holds the NFT and records the correct parties.
-- Beneficiary reassignment changes authority without moving the NFT.
-- The old beneficiary is rejected after reassignment.
-- The current beneficiary can withdraw; unauthorised wallets cannot.
-- Tests cover failed, repeated, and malicious operation attempts.
+Wallet proof prevents a user from linking an address they do not control. It also creates a reliable foundation for proving who authorised a deposit and which wallet is proposed as the new beneficiary.
 
-## Phase 6 — Backend custody orchestration and transaction monitoring
+### Completion evidence
 
-**Status: coordination experiments exist; complete integrated lifecycle is
-planned.**
+- A user can connect and verify a wallet.
+- A user cannot link someone else's address without its signature.
+- Replayed, expired, malformed, wrong-chain, and wrong-address proofs fail.
+- Replacing a connected wallet does not silently change vault permissions.
 
-- Define stable API contracts for deposit preparation, transaction submission,
-  status checks, beneficiary changes, and withdrawals.
-- Build chain adapters behind explicit network-specific interfaces.
-- Validate account session, wallet proof, asset eligibility, and requested
-  action before preparing an operation.
-- Track operations through explicit states such as created, awaiting signature,
-  submitted, confirmed, failed, and expired.
-- Use idempotency keys to prevent duplicate operations.
-- Verify transaction receipts and resulting vault state independently.
-- Handle pending transactions, timeouts, dropped transactions, and retries.
-- Reconcile backend records against chain state.
-- Keep an auditable history of custody actions without storing private keys or
-  seed phrases.
-- Never report success based only on a frontend callback or a submitted
-  transaction hash.
+## Phase 3 — Discover NFTs and decide what can be secured
 
-**Exit criteria**
+**Status: limited discovery experiments exist; reliable discovery and eligibility checks remain.**
 
-- API state and UI state agree with independently verified chain state.
-- Retries do not create duplicate deposits or withdrawals.
-- Failed and incomplete operations are visible and recoverable.
+### What we are building
 
-## Phase 7 — Beneficiary entitlement and utility integrations
+An NFT discovery service that finds assets owned by a connected wallet and presents enough information for the user to make an informed deposit decision.
 
-**Status: product requirement; implementation planned.**
+### What discovery does
 
-- Define a standard way for an application to ask who is currently authorised
-  to use a vaulted NFT.
-- Design a verifiable beneficiary proof, read interface, or integration SDK.
-- Bind proofs to the NFT contract, token ID, network, beneficiary, and expiry
-  where appropriate.
-- Prevent stale proofs from remaining valid after beneficiary reassignment.
-- Define how third-party applications verify proofs independently.
-- Build a reference integration for one membership or token-gated use case.
-- Document which utility models work without changes and which require
-  integration by the NFT issuer or application.
+The service queries the relevant chain or an indexer for NFTs associated with the wallet. It normalises different token standards into a common Carry OS asset view so the frontend can display assets consistently.
 
-**Important limitation**
+Indexers can make discovery faster, but they may be delayed or wrong. Before a deposit, Carry OS must re-check the token's current owner and token details against the blockchain.
 
-A vault-owned NFT may no longer pass a third-party application's ordinary
-direct-owner check. Carry OS must not promise universal utility preservation
-until the application can verify the authorised beneficiary.
+### Work
 
-**Exit criteria**
+- Select the NEAR RPC and indexer sources.
+- Query NFTs owned by the verified wallet.
+- Support the chosen NFT standard and identify unsupported token types.
+- Normalise collection/account, token ID, metadata, media, and owner fields.
+- Add pagination so large wallets do not return an incomplete or unusable list.
+- Handle missing images, malformed metadata, slow providers, rate limits, and temporary RPC/indexer failures.
+- Filter or label spam NFTs and collections that are not eligible for custody.
+- Check that the vault can receive the token before asking the user to deposit.
+- Re-check ownership immediately before preparing the deposit transaction.
+- Cache descriptive metadata for performance, but never use the cache as proof of current ownership.
 
-- A reference application can verify the current beneficiary.
-- A reassignment invalidates the old beneficiary's entitlement.
-- The integration's supported and unsupported cases are documented.
+### Why it matters
 
-## Phase 8 — Database, reliability, and operational foundations
+Users must know which asset they are securing and whether Carry OS can actually hold it. A stale indexer result must not cause a deposit attempt for an NFT the user no longer owns.
 
-**Status: schema and production operations remain to be completed and reviewed.**
+### Completion evidence
 
-- Finalise PostgreSQL and Prisma schema and migration ownership.
-- Store account metadata, wallet links, sessions or revocation data, discovery
-  cache, operation state, transaction references, and audit events as required.
-- Keep on-chain custody state authoritative.
-- Define encryption, access control, data minimisation, retention, and deletion.
-- Add structured logs, correlation IDs, metrics, and alerting.
-- Define RPC/indexer provider timeouts, fallbacks, and rate-limit behavior.
-- Add backup and restore procedures.
-- Add environment-specific configuration and secret management.
-- Document deployment, rollback, and incident response procedures.
+- The list belongs to the verified connected wallet and selected network.
+- Each asset shows its collection, token ID, network, and eligibility.
+- Unsupported or suspicious assets are clearly identified.
+- Deposit preparation checks current chain ownership.
 
-**Exit criteria**
+## Phase 4 — Build the NEAR vault: the custody engine
 
-- Database migrations work from a clean environment.
-- Application state can be reconciled with chain state after service downtime.
-- Secrets are not stored in source control or exposed in logs.
-- Operators can detect and investigate failed custody operations.
+**Status: NEAR vault contract code and tests exist in a public snapshot; review, integration, deployment, and full lifecycle verification remain.**
 
-## Phase 9 — Security review and testnet release
+### What we are building
+
+The NEAR vault is the smart contract that receives and holds an NFT after deposit. It is the component that enforces custody rules. The frontend and backend can request operations, but neither should be able to bypass the contract's permissions.
+
+### How the vault secures an NFT
+
+Before deposit, the NFT is owned by the user's wallet. During deposit, the user approves a transaction that transfers the NFT to the Carry vault. Once the transfer is accepted and the contract records it, the vault becomes the on-chain owner.
+
+The contract keeps a custody record identifying the NFT, original depositor, current beneficiary, and custody status. While the NFT is in custody, the contract rejects transfers or withdrawals that do not satisfy its authorisation rules.
+
+This is the actual custody boundary. A database entry saying "secured" or a frontend animation is not security. The chain must show that the vault owns the NFT and that the custody record is valid.
+
+### Work
+
+- Review the existing NEAR contract implementation against the product's authority model.
+- Confirm the NFT standard and supported collection policy.
+- Finalise how vault records are keyed and how duplicate deposits are prevented.
+- Implement the NFT receiver/deposit path and validate the incoming collection and token.
+- Record the original depositor and initial beneficiary.
+- Ensure only the contract's approved methods can change custody state.
+- Ensure arbitrary accounts cannot transfer or withdraw a secured NFT.
+- Define contract storage deposits, storage accounting, and cleanup behavior.
+- Define upgrade permissions, emergency pause, and recovery before deployment.
+- Add tests for successful deposit, wrong collection, duplicate deposit, invalid token, unauthorised caller, and failed transfer.
+- Deploy the reviewed contract to NEAR testnet.
+- Publish the contract address, source revision, deployment transaction, and explorer links.
+
+### Why it matters
+
+Without the vault contract, Carry OS is only an interface for managing information. The vault is what makes the custody promise enforceable on-chain.
+
+### Completion evidence
+
+- A testnet NFT moves from the user's wallet to the vault.
+- A chain explorer and contract read confirm the vault owns the NFT.
+- The custody record identifies the correct token, depositor, and beneficiary.
+- Unauthorised accounts cannot transfer or withdraw it.
+- Contract tests pass and deployment details are public.
+
+## Phase 5 — Change beneficiary without moving the NFT
+
+**Status: beneficiary logic exists in contract experiments; final authority rules and end-to-end verification remain.**
+
+### What we are building
+
+A beneficiary is the wallet currently authorised to benefit from a vaulted NFT. When the user changes their everyday wallet, Carry OS should let them appoint the replacement wallet without withdrawing and depositing the NFT again.
+
+### How reassignment works
+
+The proposed new wallet first proves control by signing a fresh ownership challenge. The authorised original depositor then approves a beneficiary-change transaction. The vault checks that the caller has permission and updates the beneficiary stored in the custody record.
+
+The NFT itself remains owned by the vault. Only the beneficiary record changes. After the change is confirmed, the previous beneficiary must no longer be able to use the rights assigned to the new beneficiary, including withdrawal rights where the contract defines them.
+
+### Work
+
+- Require the proposed beneficiary wallet to prove control.
+- Confirm the custody record is active and the NFT is still held by the vault.
+- Enforce the approved reassignment authority in the contract.
+- Update the beneficiary atomically on-chain.
+- Emit an event or provide a read method that exposes the updated record.
+- Reconcile the API and database with the new chain state.
+- Invalidate cached beneficiary data and any previously issued entitlement proofs.
+- Display the old and new beneficiary and the transaction evidence.
+- Test attempts by the old beneficiary, an unrelated wallet, and the backend to change the record without permission.
+- Define recovery and dispute handling for a lost or compromised depositor wallet before mainnet.
+
+### Why it matters
+
+This is the feature that separates Carry OS from simply transferring NFTs between wallets. The user changes who is authorised while the NFT remains in protected custody.
+
+### Completion evidence
+
+- The NFT remains in the vault before and after reassignment.
+- The on-chain beneficiary changes to the intended verified wallet.
+- The previous beneficiary is rejected when attempting an action it no longer controls.
+- The new beneficiary is recognised by the vault.
+- Reassignment events and transaction details can be independently verified.
+
+## Phase 6 — Withdraw the NFT safely
+
+**Status: withdrawal logic exists in contract experiments; full integrated testnet verification remains.**
+
+### What we are building
+
+Withdrawal is the controlled exit from Carry custody. It releases the NFT from the vault to the currently authorised beneficiary when that person chooses to take the asset out.
+
+### How withdrawal works
+
+The current beneficiary requests withdrawal. The vault reads its custody record and checks that the caller is the currently authorised beneficiary and that the requested destination is permitted by the contract. If the checks pass, the contract transfers the NFT out and updates or closes the custody record.
+
+The backend then verifies the transaction and checks the NFT's new owner. Only after that verification should Carry OS display the NFT as withdrawn.
+
+### Work
+
+- Define whether the beneficiary must withdraw only to its own verified wallet or may nominate another destination with explicit proof.
+- Require the appropriate wallet signature and transaction approval.
+- Check the current beneficiary and active custody status on-chain.
+- Reject the original depositor if it is no longer the authorised beneficiary.
+- Reject former beneficiaries and unrelated wallets.
+- Transfer the NFT using the supported NFT standard.
+- Update custody status and emit a withdrawal event.
+- Verify the new owner and transaction result.
+- Handle failed transfers, duplicate requests, retries, and pending transactions.
+- Add tests for authorised and unauthorised withdrawal attempts.
+
+### Why it matters
+
+A custody system must provide a clear and secure way to leave. Withdrawal rules must be enforced by the vault, not by a button being hidden in the frontend.
+
+### Completion evidence
+
+- The current beneficiary can withdraw under the approved rules.
+- The NFT is transferred to the approved destination.
+- Former beneficiaries and unrelated wallets cannot withdraw.
+- The API and UI show completion only after chain verification.
+
+## Phase 7 — Backend API: connect every part of the system
+
+**Status: NestJS foundation and backend experiments exist; full product integration remains.**
+
+### What we are building
+
+The API is the coordinator between the Carry account, connected wallets, discovery providers, database, and vault contract. It gives the frontend a consistent way to request work and check results.
+
+It does not hold the NFT and must not have unilateral power to change its beneficiary or withdraw it.
+
+### Work
+
+- Define and document endpoints for account sessions, wallet linking, NFT discovery, deposit preparation, operation status, beneficiary changes, and withdrawals.
+- Validate every request with shared types and server-side rules.
+- Require a valid Carry session for account-level operations.
+- Require a verified wallet proof for actions that depend on wallet control.
+- Prepare transactions with the correct network, contract, token, and recipient.
+- Return enough information for the wallet to display what the user is signing.
+- Track each operation through created, awaiting signature, submitted, confirmed, failed, or expired states.
+- Use idempotency keys so repeated requests do not create duplicate operations.
+- Monitor transaction hashes and read the resulting contract state.
+- Reconcile database records with chain state after timeouts or service restarts.
+- Return clear errors without exposing secrets or internal implementation data.
+
+### Why it matters
+
+Without orchestration, the frontend, wallet, contract, and database can show different versions of what happened. The API coordinates them and ensures that the application reports the result the chain actually produced.
+
+### Completion evidence
+
+- Frontend can complete deposit, reassignment, and withdrawal through the API and wallet.
+- The API never treats a submitted hash as final success.
+- Duplicate requests do not duplicate custody operations.
+- Pending, failed, and confirmed states are accurate and recoverable.
+
+## Phase 8 — Beneficiary proof and real utility preservation
+
+**Status: required product capability; implementation planned.**
+
+### What we are building
+
+A way for a third-party application to verify who is currently entitled to use a vaulted NFT.
+
+### Why it is necessary
+
+When the vault owns an NFT, a normal ownership check sees the vault address. A membership site or game that checks only direct NFT ownership may reject the beneficiary. Carry OS cannot fix that by changing its own interface. The application granting the utility must be able to recognise the beneficiary.
+
+### Work
+
+- Define a public read interface or cryptographic proof for a custody record.
+- Include network, collection, token ID, current beneficiary, custody status, and freshness/expiry information in the proof or response.
+- Ensure the proof can be independently verified and cannot be forged by the frontend.
+- Ensure beneficiary reassignment invalidates old proofs.
+- Ensure withdrawal or custody termination invalidates the entitlement.
+- Provide an SDK or simple integration guide for third-party applications.
+- Build one reference membership or token-gated application.
+- Demonstrate that the current beneficiary receives access.
+- Reassign the beneficiary and demonstrate that the previous wallet loses access while the new one gains it.
+- Document unsupported utility models and integration requirements.
+
+### Why it matters
+
+This is what turns NFT custody into utility preservation. Without it, Carry OS can protect an NFT in a vault, but cannot promise that every external service will continue recognising the person who benefits from it.
+
+### Completion evidence
+
+- A reference application verifies the current beneficiary.
+- The proof refers to the exact NFT and current on-chain custody record.
+- Old beneficiary proofs stop working after reassignment.
+- The integration is reproducible and its limitations are documented.
+
+## Phase 9 — Database, transaction history, and reliability
+
+**Status: database schema and complete operational behavior remain to be integrated and verified.**
+
+### What we are building
+
+A database and operational layer that helps Carry OS remember users, linked wallets, pending operations, transaction references, and activity history.
+
+### What the database does
+
+The database stores information that makes the application convenient and auditable. It can remember a user's linked wallets, cache NFT metadata, track which transaction belongs to an operation, and record when the user requested a deposit or beneficiary change.
+
+It does not decide who owns the NFT. If the database says "secured" but the vault no longer holds the NFT, the chain state takes priority and Carry OS must show a mismatch.
+
+### Work
+
+- Finalise PostgreSQL and Prisma schema and migrations.
+- Store Carry account identity references and verified wallet links.
+- Store session metadata or revocation state according to the chosen session design.
+- Store NFT metadata cache with source and freshness information.
+- Store operation IDs, status, idempotency keys, transaction hashes, and timestamps.
+- Store beneficiary-change and withdrawal history.
+- Store audit events describing who requested an action and what chain evidence resulted.
+- Add indexes and pagination for account history and NFT records.
+- Define encryption, database roles, data minimisation, retention, deletion, and backup policies.
+- Add reconciliation jobs to compare important application records with on-chain state.
+- Never store seed phrases or private keys.
+
+### Why it matters
+
+Users need to see what they secured and what happened over time. Operators need to investigate failures. Persistence provides that history, while blockchain reads remain authoritative for custody.
+
+### Completion evidence
+
+- Data survives restarts and migrations.
+- A user's activity history can be reconstructed.
+- Reconciliation detects stale or inconsistent records.
+- Database failure cannot silently change or fabricate custody authority.
+
+## Phase 10 — Security, testing, and NEAR testnet release
 
 **Status: planned.**
 
-- Complete threat modelling for account takeover, wallet compromise, malicious
-  collections, replay, beneficiary theft, and withdrawal abuse.
-- Add contract invariant and adversarial tests.
-- Review session, wallet proof, API, database, and frontend security.
-- Run dependency, secret, static-analysis, and dynamic security checks.
-- Obtain an independent smart-contract security review before handling
-  meaningful value.
-- Resolve findings and document accepted residual risks.
-- Publish testnet contract addresses, supported standards, known limitations,
-  and a reproducible end-to-end demo.
-- Make it explicit that testnet assets have no guaranteed value.
+### What we are building
 
-**Exit criteria**
+A tested NEAR testnet product where the complete lifecycle works and where users can verify the important actions independently.
 
-- The full NEAR testnet lifecycle passes from a clean setup.
-- Security findings are resolved or explicitly documented and accepted.
-- Users can independently verify the custody transactions on-chain.
+### Work
 
-## Phase 10 — Mainnet readiness
+- Threat-model account takeover, wallet compromise, malicious NFTs, replay, beneficiary theft, contract bugs, and withdrawal abuse.
+- Test authentication and wallet proof against forged, expired, and replayed messages.
+- Test vault permissions with authorised, former, and unrelated accounts.
+- Add contract invariant tests for custody ownership and beneficiary rules.
+- Test duplicate deposits, duplicate requests, dropped transactions, and provider outages.
+- Test API and UI behavior for pending, failed, cancelled, and confirmed operations.
+- Add dependency, secret, static-analysis, and dynamic security checks.
+- Review contract upgrade and emergency controls.
+- Obtain an independent smart-contract security review before handling meaningful value.
+- Fix findings and record any accepted limitations.
+- Deploy to NEAR testnet and publish contract addresses and explorer links.
+- Publish a clean setup guide and reproducible end-to-end demonstration.
 
-**Status: not started; requires a separate approval.**
+### Completion evidence
 
-- Complete independent audits and remediation.
-- Approve production key management, signer separation, and access controls.
-- Finalise emergency pause, recovery, and incident authority.
-- Validate monitoring, backups, disaster recovery, and support processes.
-- Review legal, privacy, and user-disclosure requirements.
-- Perform a limited release and operational readiness review.
-- Approve each supported network separately.
+- A new tester can follow the documented process from account creation to deposit, beneficiary reassignment, and withdrawal.
+- Each custody transition has a verifiable testnet transaction.
+- The old beneficiary cannot exercise reassigned rights.
+- Failed operations do not appear as successful.
+- Security findings and known limitations are disclosed.
 
-**No mainnet custody should be offered before this phase is approved.**
+## Phase 11 — Production readiness and mainnet decision
 
-## Phase 11 — Additional networks
+**Status: not started; requires explicit approval.**
 
-**Status: planned; NEAR completion does not automatically enable another chain.**
+### What we are building
 
-For each network, repeat the full integration lifecycle:
+The operational safeguards required before users trust Carry OS with assets that have real value.
 
-- select supported NFT standards and testnet;
-- choose RPC, indexer, and explorer providers;
-- implement wallet connection and ownership proof;
-- build and review the chain-specific vault or program;
-- implement discovery, deposit, beneficiary, and withdrawal flows;
-- add transaction monitoring and reconciliation;
-- pass automated and adversarial tests;
-- deploy to testnet and publish verifiable evidence;
-- complete a network-specific security review.
+### Work
 
-Planned networks:
+- Complete independent contract audits and remediate findings.
+- Approve key management, signer separation, and administrative permissions.
+- Establish emergency pause, recovery, incident authority, and user communication.
+- Add monitoring and alerts for unusual custody operations.
+- Test backups, disaster recovery, and service restoration.
+- Establish support and incident-response procedures.
+- Review privacy, legal, and user-disclosure requirements.
+- Conduct a limited release and operational readiness review.
+- Make a separate mainnet approval for each network.
 
-- **Ethereum:** EVM-compatible NFT custody, subject to selected standards and
-  vault design.
-- **Solana:** Solana-native wallet, NFT, program, and transaction integration.
-- **Robinhood Chain:** integration only after network architecture, standards,
-  RPC, and testnet details are confirmed.
+### Completion evidence
+
+- Security and operational reviews are signed off.
+- Recovery and incident procedures have been tested.
+- Monitoring can detect and alert on custody failures.
+- Mainnet deployment is explicitly approved; testnet success alone is not enough.
+
+## Phase 12 — Add other networks
+
+**Status: planned. NEAR implementation does not mean other chains are supported.**
+
+Each network needs its own complete implementation. The same product experience can be reused, but wallet signatures, NFT standards, vault programs, transaction finality, and monitoring are chain-specific.
+
+### Ethereum
+
+- Choose the first EVM network and testnet.
+- Support agreed NFT standards such as ERC-721 and, if required, ERC-1155.
+- Integrate EVM wallet connection and signature verification.
+- Build and test the Solidity vault.
+- Implement deposit, custody record, beneficiary reassignment, and withdrawal.
+- Add EVM transaction monitoring, confirmations, and reorganisation handling.
+- Publish testnet deployment and end-to-end evidence.
+
+### Solana
+
+- Select the supported Solana cluster and NFT standards.
+- Integrate Solana wallet connection and message-signature verification.
+- Build the Rust/Anchor program and define its account/PDA custody model.
+- Implement deposit, beneficiary record, reassignment, and withdrawal.
+- Add Solana-specific discovery and transaction confirmation handling.
+- Test and publish program deployment and lifecycle evidence.
+
+### Robinhood Chain
+
+- Confirm the network's architecture, EVM compatibility, token standards, RPC/explorer, and testnet availability before implementation.
+- Select the appropriate wallet and contract tooling based on verified technical details.
+- Build and test its own custody integration.
+- Do not assume Ethereum support automatically means Robinhood Chain support.
+
+### Completion evidence for every network
+
+- Wallet connection and ownership proof work on that network.
+- NFT discovery and eligibility checks work for the supported standards.
+- The chain-specific vault/program enforces the same approved custody rules.
+- Deposit, reassignment, and withdrawal pass integration and adversarial tests.
+- Transaction monitoring and explorer evidence are available.
+- The network has its own security review and documented status.
 
 ---
 
-## Cross-cutting quality requirements
+## Cross-cutting requirements
 
-These apply to every phase:
+Every phase must follow these requirements:
 
-- **Testing:** unit, integration, end-to-end, failure-path, and security tests.
-- **Accessibility:** keyboard navigation, readable contrast, semantic
-  components, and clear feedback.
-- **Observability:** traceable operations without leaking sensitive data.
-- **Documentation:** setup, API, architecture, supported networks, limitations,
-  and recovery instructions stay aligned with implementation.
-- **Honest status:** distinguish mock/demo behavior, prototype code, testnet
-  deployments, and production support.
-- **Review:** security-sensitive changes require review before integration.
-- **Evidence:** every completed custody capability has reproducible tests and
-  verifiable transaction evidence.
+- **Security:** permissions are checked by the backend and enforced on-chain where assets are involved.
+- **Testing:** normal, invalid, repeated, failure, and adversarial cases are covered.
+- **Transparency:** users can see the network, token, beneficiary, operation status, and transaction evidence.
+- **Reliability:** timeouts, retries, provider failures, and service restarts do not create false success or duplicate operations.
+- **Privacy:** collect only necessary data, protect sessions, and never store wallet secrets.
+- **Accessibility:** the product works with keyboard navigation, readable contrast, and clear status messages.
+- **Documentation:** setup and product behavior match the implementation.
+- **Honest status:** mock demonstrations, branch prototypes, testnet contracts, and production features are labelled distinctly.
 
-## Definition of done for a Carry OS feature
+## Definition of done
 
-A feature is complete only when all applicable conditions are met:
+A Carry OS capability is complete only when:
 
-1. The user-facing flow is implemented and handles loading, success, failure,
-   and cancellation.
-2. Backend validation and authorisation are enforced server-side.
-3. On-chain permissions enforce custody rules where assets are involved.
-4. Automated tests cover normal, invalid, repeated, and adversarial cases.
-5. The feature is integrated with the other required components.
-6. Documentation and environment configuration are updated.
-7. The implementation has been reviewed and its status can be independently
-   verified.
+1. The user can perform the action through the interface.
+2. The backend validates the request and the user's authority.
+3. The wallet requests the correct signature or transaction approval.
+4. The contract enforces the required custody permission.
+5. The result is independently read and verified from chain state.
+6. The database and UI reflect the verified result.
+7. Tests cover success, rejection, replay, duplicate requests, and failure.
+8. Documentation explains how to run and verify the capability.
 
-## Current non-claims
+## Current limitations that must remain visible
 
-Until the relevant evidence is added, do not claim that Carry OS has:
+Until evidence is published, do not claim that Carry OS has:
 
-- a production-ready authentication or account-recovery system;
-- complete wallet ownership verification across all networks;
+- production-ready authentication or account recovery;
+- complete wallet verification across all networks;
 - universal NFT discovery;
 - a deployed and audited production vault;
-- universal compatibility with third-party NFT utilities;
+- automatic compatibility with every NFT utility application;
 - live Ethereum, Solana, or Robinhood Chain custody;
 - production-grade monitoring, recovery, or mainnet support.
